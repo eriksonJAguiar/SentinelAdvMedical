@@ -1,3 +1,5 @@
+from typing import Any, Optional
+from lightning.pytorch.utilities.types import STEP_OUTPUT
 import torch
 import time
 import os
@@ -17,6 +19,7 @@ class TrainModelLigthning(L.LightningModule):
         self.model = model_pretrained
         self.lr = lr
         self.num_class = num_class
+        self.criterion = torch.nn.CrossEntropyLoss() if self.num_class > 2 else torch.nn.BCEWithLogitsLoss()
         
         self.train_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
         self.val_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
@@ -38,10 +41,11 @@ class TrainModelLigthning(L.LightningModule):
     
     def _shared_step(self, batch):
         features, y_true = batch
+        y_true = y_true if self.num_class > 2 else y_true.view(-1, 1).float()
         logits = self(features)
-        loss = torch.nn.functional.cross_entropy(logits, y_true)
-        y_pred = torch.argmax(logits, dim=1)
-        probs = torch.softmax(logits, dim=1)
+        loss = self.criterion(logits, y_true)
+        y_pred = torch.argmax(logits, dim=1) if self.num_class > 2 else torch.argmax(logits, dim=1).view(-1, 1).float()
+        probs = torch.softmax(logits, dim=1) if self.num_class > 2 else torch.sigmoid(logits)
         
         return loss, y_true, y_pred, probs
 
@@ -93,11 +97,34 @@ class TrainModelLigthning(L.LightningModule):
         self.log('val_auc', self.val_auc, on_epoch=True, on_step=False, prog_bar=True)
         
         return loss
+    
+    def test_step(self, batch, batch_id):
+        loss, y_true, y_pred, probs = self._shared_step(batch)
+        
+        self.val_accuracy(y_pred, y_true)
+        self.val_precision(y_pred, y_true)
+        self.val_recall(y_pred, y_true)
+        self.val_specificity(y_pred, y_true)
+        self.val_f1(y_pred, y_true)
+        self.val_auc(probs, y_true)
+        
+        self.log('test_acc', self.val_accuracy, on_epoch=True, on_step=False, prog_bar=True)
+        self.log('test_precision', self.val_precision, on_epoch=True, on_step=False, prog_bar=True)
+        self.log('test_recall', self.val_recall, on_epoch=True, on_step=False, prog_bar=True)
+        self.log('test_f1_score', self.val_f1, on_epoch=True, on_step=False, prog_bar=True)
+        self.log('test_specificity', self.val_specificity, on_epoch=True, on_step=False, prog_bar=True)
+        self.log('test_auc', self.val_auc, on_epoch=True, on_step=False, prog_bar=True)
+        
+        
+        return loss
         
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
+        optimizer = optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
+        #optimizer = optim.SGD(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
+        miletones = [0.5 * 100, 0.75 * 100]
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)
         
-        return optimizer
+        return [optimizer], [scheduler]
 
 
 class CustomTimeCallback(Callback):

@@ -1,6 +1,7 @@
 from torch import save, utils as thutils
 from torchvision import transforms, datasets, utils
 from torchvision.datasets import ImageFolder
+from torchvision.utils import make_grid
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, WeightedRandomSampler
 from sklearn.model_selection import KFold, StratifiedKFold
 import torcheval.metrics.functional as tm
@@ -32,6 +33,7 @@ class UtilsTroch:
         else:
             tf_image = transforms.Compose([
                 transforms.Resize(image_size),
+                transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                 transforms.ToTensor(),
                 #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -64,6 +66,7 @@ class UtilsTroch:
     def load_images_path(img_dir, image_size = (128, 128)):
         tf_image = transforms.Compose([transforms.ToTensor(),  
                                        transforms.Resize(image_size), 
+                                       transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                                     ])
 
@@ -113,8 +116,7 @@ class UtilsTroch:
         # print(val_data)
 
         return train_loader, test_loader, num_class
-    
-    
+     
     @staticmethod
     def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_agumentation=False, test_size=None):
         if is_agumentation:
@@ -129,24 +131,12 @@ class UtilsTroch:
         else:
             tf_image = transforms.Compose([
                 transforms.Resize(image_size),
-                transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.IMAGENET),
+                #transforms.Grayscale(num_output_channels=3),
+                transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                 transforms.ToTensor(),
                 #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
-        
-        def get_sampler(train, test):
-            
-            train_values = dict(Counter(sorted(list(map(lambda x: x[1], train)))))
-            test_values = dict(Counter(sorted(list(map(lambda x: x[1], test)))))
-                
-            class_weights_train = 1.0/np.array([*train_values.values()])
-            class_weights_test = 1.0/np.array([*test_values.values()])
-                
-            sampler_train = WeightedRandomSampler(weights=class_weights_train, replacement=False, num_samples=len(train_values))
-            sampler_test = WeightedRandomSampler(weights=class_weights_test, replacement=False, num_samples=len(test_values))
-            
-            return sampler_train, sampler_test
         
         if test_size is None:
             train = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Train")
@@ -170,10 +160,13 @@ class UtilsTroch:
             # train, test = thutils.data.random_split(data, [train_count, test_count])
             # train_sampler, test_sampler = get_sampler(train, test)
             # exit(0)
+            #train_samper, test_sampler = get_sampler(train, test)
             
             num_class = len(data.cl_name.values())
-            train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, sampler=train_sampler)
-            test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, sampler=test_sampler)
+            #train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, sampler=train_samper)
+            #test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, sampler=test_sampler)
+            train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, shuffle=True)
+            test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, shuffle=False)
         
         
         # print("Database report: \n")
@@ -299,53 +292,15 @@ class UtilsTroch:
         #test_index = np.random.choice(train_index, train_size)
     
     @staticmethod
-    def show_images(dataset, batch_size):
-        loader = thutils.data.DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
-        batch = next(iter(loader))
+    def show_images(dataset_loader, db_name):
+        #loader = thutils.data.DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
+        batch = next(iter(dataset_loader))
         images, labels = batch
-        grid = utils.make_grid(images, nrow=8)
-        plt.figure(figsize=(11,11))
-        plt.axis('off')
-        plt.imshow(np.transpose(np.clip(grid, 0, 1), (1,2,0)))
-        plt.savefig("preview_images.png")
-        print(labels)
-
-class EarlyStopping:
-    def __init__(self, patience=7, mode="max", delta=0.001):
-        self.patience = patience
-        self.counter = 0
-        self.mode = mode
-        self.best_score = None
-        self.early_stop = False
-        self.delta = delta
-        if self.mode == "min":
-            self.val_score = np.Inf
-        else:
-            self.val_score = -np.Inf
-
-    def __call__(self, epoch_score, model, model_path):
-
-        if self.mode == "min":
-            score = -1.0 * epoch_score
-        else:
-            score = np.copy(epoch_score)
-
-        if self.best_score is None:
-            self.best_score = score
-            self.save_checkpoint(epoch_score, model, model_path)
-        elif score < self.best_score:
-            self.counter += 1
-            if self.counter >= self.patience:
-                self.early_stop = True
-        else:
-            self.best_score = score
-            self.save_checkpoint(epoch_score, model, model_path)
-            self.counter = 0
-
-    def save_checkpoint(self, epoch_score, model, model_path):
-        if epoch_score not in [-np.inf, np.inf, -np.nan, np.nan]:
-            save(model.state_dict(), model_path)
-        self.val_score = epoch_score
+        plt.figure(figsize=(11, 11))
+        plt.axis("off")
+        plt.title("Training Images")
+        plt.imshow(np.transpose(make_grid(images[:32], padding=2, normalize=True), (1, 2, 0)))
+        plt.savefig("../metrics/figures/preview_train_{}.png".format(db_name))
         
 class CustomDataset(Dataset):
     def __init__(self, X, y):

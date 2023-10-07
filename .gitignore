@@ -1,3 +1,4 @@
 clean-train/trained-weights/*
 dataset/*
 metrics/*
+__pycache__

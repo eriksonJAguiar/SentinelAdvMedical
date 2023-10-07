@@ -37,25 +37,30 @@ if __name__ == '__main__':
     models_load = ModelsPretrained()
     
     #Variables to run experiments
-    learning_rate = 0.001
+    learning_rate = 0.0001
     num_epochs = int(args["epochs"])
     batch_size = 32
-    image_size = (224, 224)
-    #image_size = (229, 299)
     test_size = None if args["test_size"] is None else float(args["test_size"])
     number_experiments = int(args["exp_num"])
     as_aug = args["as_augmentation"]
     model_name = args["model_name"]
+    #image_size = (224, 224)
+    image_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
 
     medmnist = args["medmnist_db"]
     if medmnist is None:
         base_path = args["dataset"]  
         csv_path = args["dataset_csv"]
+        database_name = args["dataset_name"]
     else:
         medmnist = str(args["medmnist_db"]).lower()
+        database_name = medmnist
         as_rgb = args["as_rgb"]
         base_path = None
         csv_path = None
+    
+      
+    print("Database: {}".format(database_name))
             
 
     results_metrics = pd.DataFrame()
@@ -65,8 +70,10 @@ if __name__ == '__main__':
         if medmnist:
             train, test, num_class, task = UtilsTroch.load_medmnist(database_name=medmnist, image_size=image_size, batch_size=batch_size, as_rgb=as_rgb, balanced=False)
         else:
-            train, test, num_class = UtilsTroch.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size,csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
-            #train, test, num_class = UtilsTroch.load_database(path=base_path, batch_size=batch_size, image_size=image_size, is_agumentation=as_aug)
+            #train, test, num_class = UtilsTroch.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size,csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
+            #train, test, num_class = UtilsTroch.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
+            train, test, num_class = UtilsTroch.load_database(path=base_path, batch_size=batch_size, image_size=image_size, is_agumentation=as_aug)
+            UtilsTroch.show_images(train, database_name)
 
         print(f"Number of class: {str(num_class)}")
         
@@ -74,33 +81,28 @@ if __name__ == '__main__':
         # arquitetures_pretrained = {
         #                         "resnet50" : models_load.make_model_pretrained("resnet50", num_class),
         #                         #"resnet18" : models_load.make_model_pretrained("resnet18", num_class),
-        #                         #"densenet" : models_load.make_model_pretrained("densenet", num_class),
-        #                         #"vgg16" : models_load.make_model_pretrained("vgg16", num_class),
-        #                         #"vgg19" : models_load.make_model_pretrained("vgg19", num_class),
+        #                         "densenet" : models_load.make_model_pretrained("densenet", num_class),
+        #                         "vgg16" : models_load.make_model_pretrained("vgg16", num_class),
+        #                         "vgg19" : models_load.make_model_pretrained("vgg19", num_class),
         #                         #"efficientnet" : models_load.make_model_pretrained("efficientnet", num_class),
-        #                         #"inceptionv3" : models_load.make_model_pretrained("inceptionv3", num_class),
+        #                         "inceptionv3" : models_load.make_model_pretrained("inceptionv3", num_class),
         #                     }
         
         model_config = models_load.make_model_pretrained(model_name, num_class)
         
-        if medmnist:
-            database_name = medmnist
-        else:
-            database_name = args["dataset_name"]
-        print("Database: {}".format(database_name))
         #train_model = {}
         #test_model = {}
         #for model_name, model_config in arquitetures_pretrained.items():
             #model_select = models_load.make_model_pretrained(model_name, num_class)
         print("\nNetwork: "+ model_name + " is training...\n")
         results = train_with_pytorch.run_model(exp_num=exp_num,model=model_config, model_name=model_name, 
-                                                            database_name=database_name, train=train, test=test, 
-                                                            learning_rate=learning_rate, num_epochs=num_epochs, num_class=num_class)
-            # train_with_pytorch.run_model(model=model_select, model_name=model_name, database_name=database_name, train=train, test=test, 
-            #                              learning_rate=learning_rate, num_epochs=num_epochs, num_class=num_class, batch_size=batch_size, 
-            #                            image_size=image_size)
-            #train_model[model_name] = 
-            
+                                                                database_name=database_name, train=train, test=test, 
+                                                                learning_rate=learning_rate, num_epochs=num_epochs, num_class=num_class)
+                # train_with_pytorch.run_model(model=model_select, model_name=model_name, database_name=database_name, train=train, test=test, 
+                #                              learning_rate=learning_rate, num_epochs=num_epochs, num_class=num_class, batch_size=batch_size, 
+                #                            image_size=image_size)
+                #train_model[model_name] = 
+                
         results_metrics = pd.concat([results_metrics, results])
             
     print(results_metrics)
