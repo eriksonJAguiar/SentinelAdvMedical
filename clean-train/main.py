@@ -69,11 +69,14 @@ if __name__ == '__main__':
         print("Loading database ...")
         if medmnist:
             train, test, num_class, task = UtilsTroch.load_medmnist(database_name=medmnist, image_size=image_size, batch_size=batch_size, as_rgb=as_rgb, balanced=False)
-        else:
-            #train, test, num_class = UtilsTroch.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size,csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
-            #train, test, num_class = UtilsTroch.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
-            train, test, num_class = UtilsTroch.load_database(path=base_path, batch_size=batch_size, image_size=image_size, is_agumentation=as_aug)
             UtilsTroch.show_images(train, database_name)
+        else:
+            if not csv_path is None:
+                train, test, num_class = UtilsTroch.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size,csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
+            #train, test, num_class = UtilsTroch.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
+            else:
+                train, test, num_class = UtilsTroch.load_database(path=base_path, batch_size=batch_size, image_size=image_size, is_agumentation=as_aug)
+                UtilsTroch.show_images(train, database_name)
 
         print(f"Number of class: {str(num_class)}")
         

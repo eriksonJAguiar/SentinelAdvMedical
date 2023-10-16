@@ -1,5 +1,3 @@
-from typing import Any, Optional
-from lightning.pytorch.utilities.types import STEP_OUTPUT
 import torch
 import time
 import os
@@ -56,7 +54,6 @@ class TrainModelLigthning(L.LightningModule):
         with torch.no_grad():
              _, y_true, y_pred, probs = self._shared_step(batch)
         
-        #self.train_loss.append(loss_value.item())
         self.train_accuracy.update(y_pred, y_true)
         self.train_precision.update(y_pred, y_true)
         self.train_recall.update(y_pred, y_true)
@@ -120,6 +117,7 @@ class TrainModelLigthning(L.LightningModule):
         
     def configure_optimizers(self):
         optimizer = optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
+        #optimizer = optim.RMSprop(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
         #optimizer = optim.SGD(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
         miletones = [0.5 * 100, 0.75 * 100]
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)

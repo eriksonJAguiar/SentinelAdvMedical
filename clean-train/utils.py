@@ -16,6 +16,7 @@ import PIL
 from medmnist import INFO, Evaluator
 from sklearn.model_selection import train_test_split
 from collections import Counter
+from torch.utils.tensorboard import SummaryWriter
 
 class UtilsTroch:
     
@@ -24,16 +25,14 @@ class UtilsTroch:
         if is_agumentation:
             tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
-                                       transforms.RandomHorizontalFlip(0.3),
-                                       transforms.RandomVerticalFlip(0.3),
-                                       transforms.RandomAffine(degrees = 0, translate = (0.2, 0.2)),
+                                       transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                                        transforms.ToTensor(),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                                     ])
         else:
             tf_image = transforms.Compose([
                 transforms.Resize(image_size),
-                transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
+                #transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                 transforms.ToTensor(),
                 #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -75,7 +74,7 @@ class UtilsTroch:
         return database
 
     @staticmethod
-    def load_database_kf(path_image, batch_size, image_size=(128,128),  n_folds=5, csv_path=None):
+    def load_database_kf(path_image, batch_size, image_size=(128,128), n_folds=5, csv_path=None):
         tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
                                        transforms.RandomHorizontalFlip(0.3),
@@ -122,17 +121,14 @@ class UtilsTroch:
         if is_agumentation:
             tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
-                                       transforms.RandomHorizontalFlip(0.3),
-                                       transforms.RandomVerticalFlip(0.3),
-                                       transforms.RandomAffine(degrees = 0, translate = (0.2, 0.2)),
+                                       transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                                        transforms.ToTensor(),
+                                       #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                                     ])
         else:
             tf_image = transforms.Compose([
                 transforms.Resize(image_size),
-                #transforms.Grayscale(num_output_channels=3),
-                transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                 transforms.ToTensor(),
                 #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -143,41 +139,18 @@ class UtilsTroch:
             test = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test")
             num_class = len(train.cl_name.values())
             
-            #train_sampler, test_sampler = get_sampler(train, test)
-    
-            #train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, sampler=train_sampler)
-            #test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, )
-            
             train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, shuffle=True)
             test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, shuffle=False)
         else:
             data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path)
             
             train, test = train_test_split(data, test_size=test_size, shuffle=True)
-            # dataset_size = data.__len__()
-            # train_count = (dataset_size*(1-test_size))
-            # test_count = dataset_size - train_count
-            # train, test = thutils.data.random_split(data, [train_count, test_count])
-            # train_sampler, test_sampler = get_sampler(train, test)
-            # exit(0)
-            #train_samper, test_sampler = get_sampler(train, test)
             
             num_class = len(data.cl_name.values())
-            #train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, sampler=train_samper)
-            #test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, sampler=test_sampler)
+            
             train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, shuffle=True)
             test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, shuffle=False)
-        
-        
-        # print("Database report: \n")
-        # train_loader = thutils.data.DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-        # print(train_data)
 
-        # test_loader = thutils.data.DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False)
-        # print(test_data)
-
-        # val_loader = thutils.data.DataLoader(dataset=val_data, batch_size=batch_size, shuffle=False)
-        # print(val_data)
 
         return train_loader, test_loader, num_class
     
@@ -187,10 +160,7 @@ class UtilsTroch:
         if augmentation:
             f_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size, interpolation=PIL.Image.NEAREST),
-                                       transforms.Grayscale(num_output_channels=3),
-                                       transforms.RandomHorizontalFlip(0.3),
-                                       transforms.RandomVerticalFlip(0.3),
-                                       transforms.RandomAffine(degrees = 0, translate = (0.2, 0.2)),
+                                       transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                                        transforms.ToTensor(),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                                        #transforms.Normalize(mean=[0.5], std=[0.5])
@@ -293,7 +263,6 @@ class UtilsTroch:
     
     @staticmethod
     def show_images(dataset_loader, db_name):
-        #loader = thutils.data.DataLoader(dataset=dataset, batch_size=batch_size, shuffle=False)
         batch = next(iter(dataset_loader))
         images, labels = batch
         plt.figure(figsize=(11, 11))
@@ -301,6 +270,54 @@ class UtilsTroch:
         plt.title("Training Images")
         plt.imshow(np.transpose(make_grid(images[:32], padding=2, normalize=True), (1, 2, 0)))
         plt.savefig("../metrics/figures/preview_train_{}.png".format(db_name))
+        
+    @staticmethod
+    def save_random_train_images(train_loader, experiment_name, dataset_name, one_channel=False):
+        
+        writer = SummaryWriter('../metrics/{}'.format(experiment_name))
+        
+        # get some random training images
+        dataiter = iter(train_loader)
+        images, labels = next(dataiter)
+
+        # create grid of images
+        img_grid = make_grid(images)
+
+        # show images
+        if one_channel:
+            img = img.mean(dim=0)
+        img = img / 2 + 0.5     # unnormalize
+        npimg = img.numpy()
+        if one_channel:
+            plt.imshow(npimg, cmap="Greys")
+        else:
+            plt.imshow(np.transpose(npimg, (1, 2, 0)))
+
+        # write to tensorboard
+        writer.add_image(dataset_name, img_grid)
+     
+    @staticmethod
+    def select_n_random(data, labels, classes, experiment_name, n=100):
+        '''
+        Selects n random datapoints and their corresponding labels from a dataset
+        '''
+        assert len(data) == len(labels)
+        
+        writer = SummaryWriter('../metrics/{}'.format(experiment_name))
+
+        perm = torch.randperm(len(data))
+        images_random  = data[perm][:n] 
+        label_random = labels[perm][:n]
+
+        # get the class labels for each image
+        class_labels = [classes[lab] for lab in label_random]
+
+        # log embeddings
+        features = images_random.view(-1, 28 * 28)
+        writer.add_embedding(features,
+                            metadata=class_labels,
+                            label_img=images_random.unsqueeze(1))
+        writer.close()
         
 class CustomDataset(Dataset):
     def __init__(self, X, y):
@@ -378,7 +395,6 @@ class DatasetFromFolder(Dataset):
         
         return x, y
 
-
 class DatasetMedmnistCustom(Dataset):
     
     def __init__(self, dataset_name, image_size=(128,128), as_rgb=True, is_test=False):
@@ -432,77 +448,3 @@ class DatasetMedmnistCustom(Dataset):
         y = self.__data[idx][1]
         
         return x, y
-
-
-class MetricsClassification():
-
-    def __init__(self):
-        pass
-    
-    def __calculate_confuse_matrix(self, y_pred, y_true, num_class):
-        #mt = confusion_matrix(y_true, y_pred, labels=labels).ravel()
-        
-        if  num_class > 2:
-            fp = torch.logical_and(y_true != y_pred, y_pred != -1).sum()
-            fn = torch.logical_and(y_true != y_pred, y_pred == -1).sum()
-            tp = torch.logical_and(y_true == y_pred, y_true != -1).sum()
-            tn = torch.logical_and(y_true == y_pred, y_true == -1).sum()
-            mt = (tn, fp, fn, tp)
-        else: 
-           mt = tm.binary_confusion_matrix(y_pred, y_true).ravel()
-        
-        tn, fp, fn, tp = mt
-        
-        return tn, fp, fn, tp
-    
-    def accuracy_metric(self, y_true, y_pred, labels):
-        tn, fp, fn, tp = self.__calculate_confuse_matrix(y_true, y_pred, labels)
-        
-        if (tp+tn+fp+fn) == 0:
-            return 0.0
-        
-        return (tp+tn)/(tp+tn+fp+fn)
-    
-    def precision_metric(self, y_true, y_pred, labels):
-        tn, fp, fn, tp = self.__calculate_confuse_matrix(y_true, y_pred, labels)
-        
-        if (tp+fp) == 0:
-            return 0.0
-        
-        return tp/(tp+fp)
-    
-    def recall_metric(self, y_true, y_pred, labels):
-        tn, fp, fn, tp = self.__calculate_confuse_matrix(y_true, y_pred, labels)
-        
-        if (tp+fn) == 0:
-            return 0.0
-        
-        return tp/(tp+fn)
-    
-    def specificity_metric(self, y_pred, y_true, num_class):
-        tn, fp, fn, tp = self.__calculate_confuse_matrix(y_pred, y_true, num_class)
-        
-        return tn/(tn+fp)
-    
-    def mse_metric(self, y_pred, y_true, num_class):
-        n = len(y_pred)
-        
-        mse = (1/n)*torch.sum((y_pred - y_true)**2)
-        
-        return mse
-    
-    def f1_metric(self, y_true, y_pred, labels):
-        re = self.recall_metric(y_true, y_pred, labels)
-        pr = self.precision_metric(y_true, y_pred, labels)
-    
-        if (pr+re) == 0:
-            return 0.0
-        
-        return 2*((pr*re)/(pr+re))
-    
-    
-    def rocauc_metric(self, y_true, y_pred, labels):
-        sns = self.recall_metric(y_true, y_pred, labels)
-        spc = self.specificity_metric(y_true, y_pred, labels)
-        
-        return (np.sqrt(sns**2 + spc**2)/np.sqrt(2)) 

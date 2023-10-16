@@ -56,6 +56,25 @@ class ModelsPretrained():
             
             #model.apply(self._initialize_weights)
         
+        elif model_name == "resnet50-he":
+            model = models.resnet50()
+            
+            model.fc = torch.nn.Sequential(
+                torch.nn.Linear(model.fc.in_features, 128),
+                torch.nn.BatchNorm1d(128),
+                torch.nn.ReLU(),
+                #torch.nn.Dropout(0.5),
+                #torch.nn.Linear(512, 128),
+                torch.nn.Dropout(0.5),
+                torch.nn.Linear(128, out_features_model)
+            )
+            
+            for m in model.modules():
+                if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+                    nn.init.kaiming_normal_(m.weight)
+                    if m.bias is not None:
+                        m.bias.data.zero_()
+        
         elif model_name == "resnet18":
             model = models.resnet18(weights=models.ResNet18_Weights.IMAGENET1K_V1)
         
