@@ -13,7 +13,6 @@ import torch
 import os
 import medmnist
 import PIL
-from medmnist import INFO, Evaluator
 from sklearn.model_selection import train_test_split
 from collections import Counter
 from torch.utils.tensorboard import SummaryWriter
