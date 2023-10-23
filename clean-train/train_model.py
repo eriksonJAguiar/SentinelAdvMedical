@@ -7,7 +7,7 @@ from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from lightning.pytorch.loggers import CSVLogger
 import matplotlib.pyplot as plt
 import lightning as L
-from pl_crossvalidate import KFoldTrainer
+#from pl_crossvalidate import KFoldTrainer
 
 if torch.cuda.is_available():  
   dev = "cuda:0" 

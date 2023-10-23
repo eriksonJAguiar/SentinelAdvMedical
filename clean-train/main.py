@@ -17,7 +17,6 @@ torch.cuda.empty_cache()
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('-d','--dataset', help='databaset path', required=False)
-parser.add_argument('-dm','--dataset_name', help='databaset name', required=False)
 parser.add_argument('-dv','--dataset_csv', help='databaset csv file', required=False)
 parser.add_argument('-mn', '--medmnist_db', required=False)
 parser.add_argument('-m', '--model_name', help="model to training name: resnet50 or resnet18", required=True)
@@ -26,6 +25,7 @@ parser.add_argument('-au', '--as_augmentation', action="store_true", required=Fa
 parser.add_argument("-t", "--test_size", required=False)
 parser.add_argument("-e", "--exp_num")
 parser.add_argument("-ep", "--epochs")
+parser.add_argument('-dm','--dataset_name', help='databaset name')
 args = vars(parser.parse_args())
     
 if __name__ == '__main__':
