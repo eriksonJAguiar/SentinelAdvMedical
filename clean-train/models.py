@@ -1,7 +1,6 @@
 import torch
 import torchvision.models as models
 #from medmnist_models import ResNet50, ResNet18
-from Inception_resnet import Resnet_Inception_v1
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -30,12 +29,15 @@ class ModelsPretrained():
                 param.requires_grad = True
      
     def make_model_pretrained(self, model_name, num_class):
-        ''' 
-            function to select models pre-trained on image net and using tochvision architectures
-            params:
-                - model_name: string to describe the name of the models, such as Resnet50, Resnet18, inceptionv3, densenet201, vgg16, vgg18, and efficientnet 
-                - num_class: number of class extracted from dataset
-        '''
+        """function to select models pre-trained on image net and using tochvision architectures
+
+        Args:
+            model_name (str): string to describe the name of the models, such as Resnet50, Resnet18, inceptionv3, densenet201, vgg16, vgg18, and efficientnet
+            num_class (int): number of class extracted from dataset
+
+        Returns:
+            pytorch.model: a loaded model using the pytorch structure
+        """
         model = None
         out_features_model = num_class if num_class > 2 else 1
 
@@ -172,9 +174,6 @@ class ModelsPretrained():
                 #torch.nn.Softmax(),
             )
             #model.classifier[1] = nn.Linear(num_ftrs, out_features=out_features_model)
-
-        elif model_name == "inception-resnet":
-            model = Resnet_Inception_v1(in_channel=3, classes=out_features_model)
         
         else:
             print("Ivalid model name, exiting...")

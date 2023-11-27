@@ -73,6 +73,7 @@ if __name__ == '__main__':
         else:
             if not csv_path is None:
                 train, test, num_class = UtilsTroch.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size,csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
+                UtilsTroch.show_images(train, database_name)
             #train, test, num_class = UtilsTroch.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
             else:
                 train, test, num_class = UtilsTroch.load_database(path=base_path, batch_size=batch_size, image_size=image_size, is_agumentation=as_aug)

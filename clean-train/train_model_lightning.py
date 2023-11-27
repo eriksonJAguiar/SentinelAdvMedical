@@ -37,6 +37,16 @@ class TrainModelLigthning(L.LightningModule):
     def forward(self, x):
         return self.model(x)
     
+    def _shared_step_scaling(self, batch):
+        features, y_true = batch
+        y_true = y_true if self.num_class > 2 else y_true.view(-1, 1).float()
+        logits = self(features)
+        loss = self.criterion(logits, y_true)
+        y_pred = torch.argmax(logits, dim=1) if self.num_class > 2 else torch.argmax(logits, dim=1).view(-1, 1).float()
+        probs = torch.softmax(logits, dim=1) if self.num_class > 2 else torch.sigmoid(logits)
+
+        return loss, y_true, y_pred, probs
+    
     def _shared_step(self, batch):
         features, y_true = batch
         y_true = y_true if self.num_class > 2 else y_true.view(-1, 1).float()

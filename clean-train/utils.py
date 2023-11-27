@@ -2,7 +2,7 @@ from torch import save, utils as thutils
 from torchvision import transforms, datasets, utils
 from torchvision.datasets import ImageFolder
 from torchvision.utils import make_grid
-from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, WeightedRandomSampler
+from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, Subset
 from sklearn.model_selection import KFold, StratifiedKFold
 import torcheval.metrics.functional as tm
 from PIL import Image
@@ -16,6 +16,10 @@ import PIL
 from sklearn.model_selection import train_test_split
 from collections import Counter
 from torch.utils.tensorboard import SummaryWriter
+
+RANDOM_SEED = 123
+torch.manual_seed(RANDOM_SEED)
+np.random.seed(RANDOM_SEED)
 
 class UtilsTroch:
     
@@ -138,17 +142,23 @@ class UtilsTroch:
             test = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test")
             num_class = len(train.cl_name.values())
             
-            train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, shuffle=True)
-            test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, shuffle=False)
+            train_loader = DataLoader(train, batch_size=batch_size, num_workers=4, shuffle=True)
+            test_loader = DataLoader(test, batch_size=batch_size, num_workers=4, shuffle=False)
         else:
             data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path)
             
-            train, test = train_test_split(data, test_size=test_size, shuffle=True)
+            train, test = train_test_split(list(range(len(data))), test_size=test_size, shuffle=True, random_state=RANDOM_SEED)
+            
+            index_num = int(np.floor(0.1*len(test)))
+            test_index = test[:len(test)-index_num]
+            
+            sub_train = Subset(data, train)
+            sub_test = Subset(data, test_index)
             
             num_class = len(data.cl_name.values())
             
-            train_loader = DataLoader(train, batch_size=batch_size, num_workers=8, shuffle=True)
-            test_loader = DataLoader(test, batch_size=batch_size, num_workers=8, shuffle=False)
+            train_loader = DataLoader(sub_train, batch_size=batch_size, num_workers=4, shuffle=True)
+            test_loader = DataLoader(sub_test, batch_size=batch_size, num_workers=4, shuffle=False)
 
 
         return train_loader, test_loader, num_class
