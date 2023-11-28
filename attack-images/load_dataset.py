@@ -79,7 +79,35 @@ def show_images(dataset_loader, db_name):
     plt.axis("off")
     plt.title("Training Images")
     plt.imshow(np.transpose(make_grid(images[:32], padding=2, normalize=True), (1, 2, 0)))
-    plt.savefig("./attack-images/preview_train_{}.png".format(db_name))
+    plt.savefig("./attack-images/preview_train_{}.png".format(db_name), bbox_inches='tight', pad_inches=0)
+
+
+def show_images_from_array(images_array, db_name):
+    """function that show images from dataloader
+
+    Args:
+        dataset_loader (_type_): _description_
+        db_name (_type_): _description_
+
+    """        
+    plt.figure(figsize=(11, 11))
+    plt.axis("off")
+    plt.title("Training Images")
+    plt.imshow(np.transpose(make_grid(torch.Tensor(images_array[:32]), padding=2, normalize=True), (1, 2, 0)))
+    plt.savefig("./attack-images/preview_train_{}.png".format(db_name), bbox_inches='tight', pad_inches=0)
+    
+
+def show_random_adv_image(images_array, db_name, attack_name):
+    
+    np.random.seed(123)
+    
+    image_idx = np.random.randint(0, len(images_array))
+    
+    plt.figure(figsize=(11, 11))
+    plt.axis("off")
+    plt.imshow(np.transpose(make_grid(torch.Tensor(images_array[image_idx]), normalize=True), (1, 2, 0)))
+    plt.savefig("./attack-images/attack_preview_{}_{}.png".format(db_name, attack_name), bbox_inches='tight', pad_inches=0)
+    
 
 class CustomDatasetFromCSV(Dataset):
     def __init__(self, path_root, tf_image, csv_name, task=None):
