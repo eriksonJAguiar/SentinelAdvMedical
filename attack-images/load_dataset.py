@@ -99,7 +99,7 @@ def show_images_from_array(images_array, db_name):
 
 def show_random_adv_image(images_array, db_name, attack_name):
     
-    np.random.seed(123)
+    #np.random.seed(123)
     
     image_idx = np.random.randint(0, len(images_array))
     
@@ -107,6 +107,18 @@ def show_random_adv_image(images_array, db_name, attack_name):
     plt.axis("off")
     plt.imshow(np.transpose(make_grid(torch.Tensor(images_array[image_idx]), normalize=True), (1, 2, 0)))
     plt.savefig("./attack-images/attack_preview_{}_{}.png".format(db_name, attack_name), bbox_inches='tight', pad_inches=0)
+    
+
+def save_all_adv_image(path_to_save, images_array, db_name, attack_name):
+    
+    if not os.path.exists(os.path.join(path_to_save, db_name, attack_name)):
+        os.mkdir(os.path.join(path_to_save, db_name, attack_name))
+    
+    plt.figure(figsize=(11, 11))
+    plt.axis("off")
+    for i, image in enumerate(images_array):
+        plt.imshow(np.transpose(make_grid(torch.Tensor(image), normalize=True), (1, 2, 0)))
+        plt.savefig("{}_attack{}_{}_{}.png".format(path_to_save, i,db_name, attack_name), bbox_inches='tight', pad_inches=0)
     
 
 class CustomDatasetFromCSV(Dataset):

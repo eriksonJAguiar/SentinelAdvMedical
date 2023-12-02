@@ -3,7 +3,7 @@ import load_dataset
 import generate_attacks
 
     
-def test_generate_attack_resnet50_DeepFool():
+def test_generate_attack_resnet50_CW():
     
     dataset_name = "melanoma"
     root_path = "./"
@@ -19,16 +19,16 @@ def test_generate_attack_resnet50_DeepFool():
                         input_shape=(224,224),
                         lr=0.0001,
                         nb_class=num_class,
-                        attack_name="DeepFool",
+                        attack_name="CW",
                         data_loader=val_attack_dataset,
                         eps=0.1
-                    ) 
+                    )
     
-    load_dataset.show_random_adv_image(adv_images, dataset_name, "DeepFool_resnet50")
+    load_dataset.show_random_adv_image(adv_images, dataset_name, "CW_resnet50")
     
     assert adv_images is not None
 
-def test_generate_attack_densenet_DeepFool():
+def test_generate_attack_densenet_CW():
     
     dataset_name = "melanoma"
     root_path = "./"
@@ -44,16 +44,16 @@ def test_generate_attack_densenet_DeepFool():
                         input_shape=(224,224),
                         lr=0.0001,
                         nb_class=num_class,
-                        attack_name="DeepFool",
+                        attack_name="CW",
                         data_loader=val_attack_dataset,
                         eps=0.1
                     )
     
-    load_dataset.show_random_adv_image(adv_images, dataset_name, "DeepFool_densenet")
+    load_dataset.show_random_adv_image(adv_images, dataset_name, "CW_densenet")
     
     assert adv_images is not None
     
-def test_generate_attack_efficientnet_DeepFool():
+def test_generate_attack_efficientnet_CW():
     
     dataset_name = "melanoma"
     root_path = "./"
@@ -69,16 +69,16 @@ def test_generate_attack_efficientnet_DeepFool():
                         input_shape=(224,224),
                         lr=0.0001,
                         nb_class=num_class,
-                        attack_name="DeepFool",
+                        attack_name="CW",
                         data_loader=val_attack_dataset,
                         eps=0.1
                     )
     
-    load_dataset.show_random_adv_image(adv_images, dataset_name, "DeepFool_efficientnet")
+    load_dataset.show_random_adv_image(adv_images, dataset_name, "CW_efficientnet")
     
     assert adv_images is not None
 
-def test_generate_attack_inceptionv3_DeepFool():
+def test_generate_attack_inceptionv3_CW():
     
     dataset_name = "melanoma"
     root_path = "./"
@@ -94,16 +94,16 @@ def test_generate_attack_inceptionv3_DeepFool():
                         input_shape=(224,224),
                         lr=0.0001,
                         nb_class=num_class,
-                        attack_name="DeepFool",
+                        attack_name="CW",
                         data_loader=val_attack_dataset,
                         eps=0.1
                     )
     
-    load_dataset.show_random_adv_image(adv_images, dataset_name, "DeepFool_inceptionv3")
+    load_dataset.show_random_adv_image(adv_images, dataset_name, "CW_inceptionv3")
     
     assert adv_images is not None
 
-def test_generate_attack_vgg16_DeepFool():
+def test_generate_attack_vgg16_CW():
     
     dataset_name = "melanoma"
     root_path = "./"
@@ -119,16 +119,16 @@ def test_generate_attack_vgg16_DeepFool():
                         input_shape=(224,224),
                         lr=0.0001,
                         nb_class=num_class,
-                        attack_name="DeepFool",
+                        attack_name="CW",
                         data_loader=val_attack_dataset,
                         eps=0.1
                     )
     
-    load_dataset.show_random_adv_image(adv_images, dataset_name, "DeepFool_vgg16")
+    load_dataset.show_random_adv_image(adv_images, dataset_name, "CW_vgg16")
     
     assert adv_images is not None
 
-def test_generate_attack_vgg19_DeepFool():
+def test_generate_attack_vgg19_CW():
     
     dataset_name = "melanoma"
     root_path = "./"
@@ -144,11 +144,11 @@ def test_generate_attack_vgg19_DeepFool():
                         input_shape=(224,224),
                         lr=0.0001,
                         nb_class=num_class,
-                        attack_name="DeepFool",
+                        attack_name="CW",
                         data_loader=val_attack_dataset,
                         eps=0.1
                     )
     
-    load_dataset.show_random_adv_image(adv_images, dataset_name, "DeepFool_vgg19")
+    load_dataset.show_random_adv_image(adv_images, dataset_name, "CW_vgg19")
     
     assert adv_images is not None
