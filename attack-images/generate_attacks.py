@@ -5,7 +5,7 @@ import torchvision
 import numpy as np
 
 from art.estimators.classification import PyTorchClassifier
-from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent, SquareAttack
+from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent
 
 #import foolbox as fb
 #from foolbox.attacks import L2FastGradientAttack, L2CarliniWagnerAttack, L2DeepFoolAttack
@@ -138,8 +138,6 @@ def __get_adv_attack(attack_name, data_loader, nb_class, classifier, eps):
         attack = ProjectedGradientDescent(estimator=classifier, eps=eps, batch_size=32)    
     elif attack_name == "UAP":
         attack = UniversalPerturbation(classifier=classifier, attacker="pgd", eps=eps, max_iter=5, batch_size=32)
-    elif attack_name == "Square":
-        attack = SquareAttack(estimator=classifier, max_iter=5, batch_size=32, eps=eps)
     
     adv_attack = attack.generate(x=images)
     

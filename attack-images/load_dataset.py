@@ -10,6 +10,7 @@ import os
 import torch
 from PIL import Image
 import matplotlib.pyplot as plt
+from PIL import Image
 
 RANDOM_SEED = 123 
 
@@ -99,26 +100,31 @@ def show_images_from_array(images_array, db_name):
 
 def show_random_adv_image(images_array, db_name, attack_name):
     
-    #np.random.seed(123)
-    
     image_idx = np.random.randint(0, len(images_array))
     
     plt.figure(figsize=(11, 11))
     plt.axis("off")
     plt.imshow(np.transpose(make_grid(torch.Tensor(images_array[image_idx]), normalize=True), (1, 2, 0)))
-    plt.savefig("./attack-images/attack_preview_{}_{}.png".format(db_name, attack_name), bbox_inches='tight', pad_inches=0)
+    plt.savefig("./attack_preview_{}_{}.png".format(db_name, attack_name), bbox_inches='tight', pad_inches=0)
     
 
-def save_all_adv_image(path_to_save, images_array, db_name, attack_name):
+def save_all_adv_image(path_to_save, images_array, labels, db_name ,attack_name):
+    
+    cls = ["akiec","bcc","bkl","df","mel","nv","vasc"]
     
     if not os.path.exists(os.path.join(path_to_save, db_name, attack_name)):
         os.mkdir(os.path.join(path_to_save, db_name, attack_name))
     
+    for c in cls:
+        if not os.path.exists(os.path.join(path_to_save, db_name, attack_name, c)):
+            os.mkdir(os.path.join(path_to_save, db_name, attack_name, c))
+    
     plt.figure(figsize=(11, 11))
     plt.axis("off")
-    for i, image in enumerate(images_array):
-        plt.imshow(np.transpose(make_grid(torch.Tensor(image), normalize=True), (1, 2, 0)))
-        plt.savefig("{}_attack{}_{}_{}.png".format(path_to_save, i,db_name, attack_name), bbox_inches='tight', pad_inches=0)
+    for i in range(len(images_array)):
+        plt.axis("off")
+        plt.imshow(np.transpose(make_grid(torch.Tensor(images_array[i]), normalize=True), (1, 2, 0)))
+        plt.savefig("{}/{}/{}/{}/{}_{}_{}.png".format(path_to_save, db_name, attack_name, cls[int(labels[i])], cls[int(labels[i])], attack_name, i), bbox_inches='tight', pad_inches=0)
     
 
 class CustomDatasetFromCSV(Dataset):
