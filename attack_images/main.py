@@ -1,4 +1,4 @@
-import load_dataset
+import attack_images.utils as utils
 import generate_attacks
 import torch
 import numpy as np
@@ -17,9 +17,7 @@ parser.add_argument('-an', '--attack_name', help="Attack name FGSM, PGD, CW or U
 parser.add_argument('-e', '--eps', help="Attack noise", required=True)
 parser.add_argument('-pa', '--path_attack', help="Attack noise", required=True)
 
-
 args = vars(parser.parse_args())
-
 
 if __name__ == '__main__':
 
@@ -29,25 +27,25 @@ if __name__ == '__main__':
     dataset_name = args["dataset_name"]
     root_path = args["dataset"]
     csv_path = args["dataset_csv"]
-    input_size = (224,224)
+    model_name = args["model_name"]
+    input_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
     batch_size = 32
     lr = 0.0001
     
-    
     print("Load validation database using {}...".format(dataset_name))
-    val_attack_dataset, num_class = load_dataset.load_attacked_database_df(root_path=root_path, csv_path=csv_path, batch_size=batch_size, image_size=input_size, percentage_attacked=0.2, test_size=0.3)
+    val_attack_dataset, num_class = utils.load_attacked_database_df(root_path=root_path, csv_path=csv_path, batch_size=batch_size, image_size=input_size, percentage_attacked=0.2, test_size=0.3)
     
     model_path = args["weights_path"]
-    model_name = args["model_name"]
     attack_name = args["attack_name"]
     eps = float(args["eps"])
     path_attack_to = args["path_attack"]
     
+    model = utils.read_model_from_checkpoint(model_path=model_path, model_name=model_name, nb_class=num_class)
+    
     print("Generate attacked images using attack {}...".format(attack_name))
     print("The eps is {}".format(str(eps)))
     adv_images, true_labels = generate_attacks.generate_attack(
-                        model_path=model_path,
-                        model_name=model_name,
+                        model=model,
                         input_shape=input_size,
                         lr=lr,
                         nb_class=num_class,
@@ -56,7 +54,8 @@ if __name__ == '__main__':
                         eps=eps
                     )
     
-    print("save attacked images...")
-    load_dataset.save_all_adv_image(path_to_save=path_attack_to, images_array=adv_images, labels=true_labels, db_name=dataset_name, attack_name="{}_{}".format(attack_name, model_name))
+    #print("save attacked images...")
+    #utils.save_all_adv_image(path_to_save=path_attack_to, images_array=adv_images, labels=true_labels, db_name=dataset_name, attack_name="{}_{}".format(attack_name, model_name))
+    
     
     

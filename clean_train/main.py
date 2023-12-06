@@ -1,4 +1,4 @@
-from utils import UtilsTroch, DatasetMedmnistCustom
+from ODD_analysis.utils import UtilsTroch, DatasetMedmnistCustom
 from train_model import PytorchTrainingAndTest
 from models import ModelsPretrained
 import argparse

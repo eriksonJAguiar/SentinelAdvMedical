@@ -1,7 +1,9 @@
-clean-train/trained-weights/*
+clean_train/trained-weights/*
 dataset/*
 metrics/*
 __pycache__
 .vscode
 .pytest_cache
 *.png
+.out
+test_*
