@@ -2,6 +2,7 @@ import attack_images.utils as utils
 import generate_attacks
 import torch
 import numpy as np
+import pandas as pd
 import argparse
 
 
@@ -15,7 +16,7 @@ parser.add_argument('-wp', '--weights_path', help="model weigths path", required
 
 parser.add_argument('-an', '--attack_name', help="Attack name FGSM, PGD, CW or UAP", required=True)
 parser.add_argument('-e', '--eps', help="Attack noise", required=True)
-parser.add_argument('-pa', '--path_attack', help="Attack noise", required=True)
+#parser.add_argument('-pa', '--path_attack', help="Attack noise", required=True)
 
 args = vars(parser.parse_args())
 
@@ -38,13 +39,13 @@ if __name__ == '__main__':
     model_path = args["weights_path"]
     attack_name = args["attack_name"]
     eps = float(args["eps"])
-    path_attack_to = args["path_attack"]
+    #path_attack_to = args["path_attack"]
     
     model = utils.read_model_from_checkpoint(model_path=model_path, model_name=model_name, nb_class=num_class)
     
     print("Generate attacked images using attack {}...".format(attack_name))
     print("The eps is {}".format(str(eps)))
-    adv_images, true_labels = generate_attacks.generate_attack(
+    images, adv_images, true_labels = generate_attacks.generate_attack(
                         model=model,
                         input_shape=input_size,
                         lr=lr,
@@ -53,6 +54,13 @@ if __name__ == '__main__':
                         data_loader=val_attack_dataset,
                         eps=eps
                     )
+    
+    loader_clean = utils.numpy_to_dataloader(images=images, labels=true_labels, batch_size=32)
+    loader_adv = utils.numpy_to_dataloader(images=adv_images, labels=true_labels, batch_size=32)
+    
+    metrics_avg, metrics_epochs = generate_attacks.evaluate_model(model=model, dataset_clean=loader_clean, dataset_adv=loader_adv)
+    
+    
     
     #print("save attacked images...")
     #utils.save_all_adv_image(path_to_save=path_attack_to, images_array=adv_images, labels=true_labels, db_name=dataset_name, attack_name="{}_{}".format(attack_name, model_name))

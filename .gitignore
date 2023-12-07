@@ -5,5 +5,5 @@ __pycache__
 .vscode
 .pytest_cache
 *.png
-.out
+*.out
 test_*
