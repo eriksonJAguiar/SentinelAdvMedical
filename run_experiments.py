@@ -35,9 +35,9 @@ if __name__ == '__main__':
     #2nd define parameters
     batch_size = 32
     lr = 0.0001
-    models = ["densenet"] #["resnet50", "vgg16", "vgg19", "inceptionv3", "efficientnet", "densenet"]
-    attacks = ["UAP"] #["FGSM", "PGD", "UAP"]
-    epsilons = [0.05, 0.1, 0.5] #[0.001, 0.01, 0.05, 0.1, 0.5]
+    models = ["resnet50", "vgg16", "vgg19", "inceptionv3", "efficientnet", "densenet"]
+    attacks = ["FGSM", "PGD", "UAP"]
+    epsilons = [0.001, 0.01, 0.05, 0.1, 0.5]
     
     for model_name in models:
         print("Starting attack for model {}...".format(model_name))
@@ -56,6 +56,5 @@ if __name__ == '__main__':
                                                batch_size=batch_size, 
                                                lr=lr,
                                                save_metrics_path="./metrics")
-    
     
     
