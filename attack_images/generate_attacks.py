@@ -71,18 +71,16 @@ def __get_adv_attack(attack_name, data_loader, nb_class, classifier, eps):
     
     return images, adv_attack, true_labels
 
-def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, attack_name, eps, batch_size, lr, save_metrics_path):    
-   
-    input_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
+def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, input_size, attack_name, eps, batch_size, lr, save_metrics_path):    
         
-    #3rd read validation dataset to attack the model
+    #1st read validation dataset to attack the model
     val_attack_dataset, num_class = utils.load_attacked_database_df(root_path=root_path, csv_path=csv_path, batch_size=batch_size, image_size=input_size, percentage_attacked=0.2, test_size=0.3)
         
-    #4th read models from checkpoints
+    #2nd read models from checkpoints
     model_path = os.path.join(weights_path, "{}-{}-exp0.ckpt".format(model_name, dataset_name))
     model = utils.read_model_from_checkpoint(model_path=model_path, model_name=model_name, nb_class=num_class)
             
-    #5th run attack
+    #3rd run attack
     time_start = time.time()
     images, adv_images, true_labels = generate_attack(
                             model=model,
@@ -95,15 +93,15 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, atta
                         )
     final_time = time.time() - time_start
                 
-    #6th convert images and labels to dataloader
+    #4th convert images and labels to dataloader
     loader_clean = utils.numpy_to_dataloader(images=images, labels=true_labels, batch_size=32)
     loader_adv = utils.numpy_to_dataloader(images=adv_images, labels=true_labels, batch_size=32)
                 
-    #7th evaluate accuracy of the models
-    metrics_epochs = evaluate.evaluate_model(model=model, dataset_clean=loader_clean, dataset_adv=loader_adv, nb_class=num_class)
+    #5th evaluate accuracy of the models
+    metrics_epochs, logits_clean, logits_adv = evaluate.evaluate_model(model=model, dataset_clean=loader_clean, dataset_adv=loader_adv, nb_class=num_class)
     size = len(metrics_epochs["epochs"])
                 
-    #8th define metrics
+    #6th define metrics
     metrics_avg = pd.DataFrame([{"model": model_name, 
                                  "attack": attack_name, 
                                  "eps": eps, 
@@ -116,17 +114,27 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, atta
     metrics_time = pd.DataFrame([{"attack": attack_name, 
                                   "examples": len(images),
                                   "time": final_time}])
-    
+    #7th save metrics to dataframe
     metrics_epochs["model"] = np.repeat(model_name, size)
     metrics_epochs["attack"] = np.repeat(attack_name, size)
     metrics_epochs["eps"] = np.repeat(eps, size)
                 
-    #9th save metrics to CSV
+
+    #8th define path to save metrics
     avg_path = os.path.join(save_metrics_path, "attacks_avg.csv")
     epochs_path = os.path.join(save_metrics_path, "attacks_epochs.csv")
     time_path = os.path.join(save_metrics_path, "attacks_time.csv")
     
+    #9th save metrics to CSV file
     metrics_avg.to_csv(avg_path, index=False, mode="a", header=False if os.path.exists(avg_path) else True)
     metrics_epochs.to_csv(epochs_path, index=False, mode="a", header=False if os.path.exists(epochs_path) else True)
     metrics_time.to_csv(time_path, index=False, mode="a", header=False if os.path.exists(time_path) else True)
+    
+    #10th save logits to numpy file
+    if not os.path.exists(os.path.join(save_metrics_path, "clean_logits_{}.npy".format(model_name))):
+        with open(os.path.join(save_metrics_path, "clean_logits_{}.npy".format(model_name)), "wb") as f:
+            np.save(f, logits_clean, allow_pickle=True)
+    
+    with open(os.path.join(save_metrics_path, "adv_logits_{}_{}_{}.npy".format(model_name, attack_name, str(eps))), "wb") as f:
+        np.save(f, logits_adv, allow_pickle=True)
     

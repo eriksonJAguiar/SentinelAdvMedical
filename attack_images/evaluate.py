@@ -17,6 +17,9 @@ def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
     adv_auc = AUROC(task="binary") if not nb_class > 2 else AUROC(task="multiclass", num_classes=nb_class, average="macro")
     val_auc = AUROC(task="binary") if not nb_class > 2 else AUROC(task="multiclass", num_classes=nb_class, average="macro")
     
+    logits_clean  = []
+    logits_adv = []
+    
     model.eval()
     with torch.no_grad():
         for i, (data_clean, data_adv) in enumerate(zip(dataset_clean, dataset_adv)):
@@ -24,6 +27,7 @@ def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
             x_clean, y_clean = data_clean
             x_clean, y_clean = x_clean.to(device), y_clean.to(device)
             pred_clean = model(x_clean)
+            logits_clean.append(pred_clean.detach().cpu().numpy())
             y_clean = y_clean if nb_class > 2 else y_clean.view(-1, 1).float()
             y_pred = torch.argmax(pred_clean, dim=1) if nb_class > 2 else torch.argmax(pred_clean, dim=1).view(-1, 1).float()
             y_prob = torch.softmax(pred_clean, dim=1) if nb_class > 2 else torch.sigmoid(pred_clean)
@@ -31,13 +35,13 @@ def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
             accuracy_clean = np.sum(y_pred.cpu().numpy() == y_clean.cpu().numpy()) / len(y_clean)
             avg_accuracy_clean.append(accuracy_clean)
             val_auc(y_prob, y_clean)
-            
             avg_auc_clean.append(val_auc.compute().cpu().numpy())
         
             #test images for adversarial examples
             x_adv, y_adv = data_adv
             x_adv, y_adv = x_adv.to(device), y_adv.to(device)
             pred_adv = model(x_adv)
+            logits_adv.append(pred_adv.detach().cpu().numpy())
             y_adv = y_adv if nb_class > 2 else y_adv.view(-1, 1).float()
             y_pred = torch.argmax(pred_adv, dim=1) if nb_class > 2 else torch.argmax(pred_adv, dim=1).view(-1, 1).float()
             y_prob = torch.softmax(pred_adv, dim=1) if nb_class > 2 else torch.sigmoid(pred_adv)
@@ -58,4 +62,7 @@ def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
     epochs_metrics["val_auc_adv"] = avg_auc_adv
     epochs_metrics["asr"] = asr
     
-    return epochs_metrics
+    logits_clean = np.asanyarray(logits_clean)
+    logits_adv = np.asanyarray(logits_adv)
+    
+    return epochs_metrics, logits_clean, logits_adv

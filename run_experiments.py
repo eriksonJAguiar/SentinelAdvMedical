@@ -23,8 +23,8 @@ args = vars(parser.parse_args())
 
 if __name__ == '__main__':
 
-    torch.manual_seed(123)
-    np.random.seed(123)
+    torch.manual_seed(43)
+    np.random.seed(43)
     
     #1st define de args
     dataset_name = args["dataset_name"]
@@ -36,11 +36,12 @@ if __name__ == '__main__':
     batch_size = 32
     lr = 0.0001
     models = ["resnet50", "vgg16", "vgg19", "inceptionv3", "efficientnet", "densenet"]
-    attacks = ["FGSM", "PGD", "UAP"]
+    attacks = ["FGSM", "PGD", "UAP", "DeepFool", "CW"] #["FGSM", "PGD", "UAP"]
     epsilons = [0.001, 0.01, 0.05, 0.1, 0.5]
     
     for model_name in models:
         print("Starting attack for model {}...".format(model_name))
+        input_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
         for attack_name in attacks:
             print("Generate attacked images using attack {}...".format(attack_name))
             for eps in epsilons: 
@@ -51,6 +52,7 @@ if __name__ == '__main__':
                                                csv_path=csv_path, 
                                                weights_path=weights_path, 
                                                model_name=model_name,
+                                               input_size=input_size,
                                                attack_name=attack_name, 
                                                eps=eps, 
                                                batch_size=batch_size, 
