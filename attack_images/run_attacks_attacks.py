@@ -1,4 +1,7 @@
-import utils
+import sys
+sys.path.append("../utils")
+
+from utils import utils
 import generate_attacks
 import numpy as np
 import pandas as pd

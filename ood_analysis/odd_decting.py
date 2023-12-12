@@ -1,7 +1,9 @@
 import sys
 sys.path.append("../attack_images")
+sys.path.append("../utils")
 
-from attack_images import utils, generate_attacks
+from attack_images import generate_attacks
+from utils import utils
 from pytorch_ood.detector import MaxSoftmax, ODIN, MaxLogit, Mahalanobis, EnergyBased, KNN, ViM, Entropy
 from pytorch_ood.utils import OODMetrics
 import numpy as np
@@ -39,7 +41,7 @@ def odd_detector(root_path, csv_path, batch_size, image_size, model_path, model_
     dataloader_atttacked = utils.numpy_to_dataloader(images=in_out_images, labels=in_out_labels, batch_size=batch_size)
     
     #5th create the detector
-    dectetor = __get_ood_strategy(odd_name=ood_name, model=model, eps=eps, t=1.0)
+    dectetor = __get_ood_strategy(odd_name=ood_name, model=model, eps=eps, t=3.0)
     
     #6th calculate metrics for detector
     metrics = OODMetrics()

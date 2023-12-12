@@ -212,6 +212,14 @@ def numpy_to_dataloader(images, labels, batch_size):
     
     return val_loader
 
+def dataloader_to_numpy(dataloader):
+    
+    images, labels = zip(*[dataloader.dataset[i] for i in range(len(dataloader.dataset))])
+    images = torch.stack(images).numpy() 
+    labels = np.array(labels)
+    
+    return images, labels
+
 class CustomDatasetFromCSV(Dataset):
     def __init__(self, path_root, tf_image, csv_name, task=None):
         self.data = pd.read_csv(csv_name)

@@ -3,9 +3,14 @@ sys.path.append("./ood_analysis")
 sys.path.append('./attack_images')
 
 from ood_analysis import odd_decting
+import torch
+import numpy as np
 
 
 if __name__ == '__main__':
+    
+    torch.manual_seed(43)
+    np.random.seed(43)
     
     dataset_name = "MelanomaDB"
     root_path = "./"
@@ -19,7 +24,7 @@ if __name__ == '__main__':
                                          image_size=(224, 224), 
                                          model_path=model_path, 
                                          model_name=model_name,
-                                         attack_name="FGSM",
+                                         attack_name="UAP",
                                          ood_name="MaxSoftmax",
                                          lr=0.0001, 
                                          eps=0.05)
