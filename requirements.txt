@@ -1,0 +1,15 @@
+torch
+torchmetrics
+numpy
+pandas
+torchvision
+scikit-learn
+jupyterlab
+matplotlib
+pillow
+lightning
+matplotlib
+seaborn
+tensorboard
+adversarial-robustness-toolbox
+pytorch-ood

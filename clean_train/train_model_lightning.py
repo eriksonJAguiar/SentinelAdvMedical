@@ -6,10 +6,8 @@ import torch.optim as optim
 import torchvision.models as models
 import lightning as L
 from torch.nn import functional as F
-from torchmetrics import Accuracy, Recall, Specificity, Precision, F1Score, AUROC, MatthewsCorrCoef
+from torchmetrics import Accuracy, Recall, Specificity, Precision, F1Score, AUROC
 from lightning.pytorch.callbacks import Callback
-from medmnist import Evaluator
-torch.manual_seed(123)
 
 class TrainModelLigthning(L.LightningModule):
     def __init__(self, model_pretrained, num_class, lr):

@@ -4,14 +4,14 @@ from torchvision.datasets import ImageFolder
 from torchvision.utils import make_grid
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, Subset
 from sklearn.model_selection import KFold, StratifiedKFold
-import torcheval.metrics.functional as tm
+#import torcheval.metrics.functional as tm
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import torch
 import os
-import medmnist
+#import medmnist
 import PIL
 from sklearn.model_selection import train_test_split
 from collections import Counter

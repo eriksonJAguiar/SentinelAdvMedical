@@ -1,10 +1,8 @@
-from torch import save, utils as thutils
-from torchvision import transforms, datasets, utils
+from torchvision import transforms, datasets
 from torchvision.datasets import ImageFolder
 from torchvision.utils import make_grid
 from torch.utils.data import Dataset, DataLoader, SubsetRandomSampler, Subset
 from sklearn.model_selection import KFold, StratifiedKFold
-import torcheval.metrics.functional as tm
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
@@ -17,7 +15,8 @@ from sklearn.model_selection import train_test_split
 from collections import Counter
 from torch.utils.tensorboard import SummaryWriter
 
-RANDOM_SEED = 43
+
+RANDOM_SEED = 123
 
 torch.manual_seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)

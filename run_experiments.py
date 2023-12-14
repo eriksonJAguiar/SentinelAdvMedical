@@ -23,8 +23,8 @@ args = vars(parser.parse_args())
 
 if __name__ == '__main__':
 
-    torch.manual_seed(43)
-    np.random.seed(43)
+    torch.manual_seed(123)
+    np.random.seed(123)
     
     #1st define de args
     dataset_name = args["dataset_name"]

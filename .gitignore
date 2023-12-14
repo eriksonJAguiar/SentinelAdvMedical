@@ -8,3 +8,5 @@ __pycache__
 *.out
 test_*
 *.ipynb
+env-ood
+include

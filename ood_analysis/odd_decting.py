@@ -56,6 +56,8 @@ def odd_detector(root_path, csv_path, batch_size, image_size, model_path, model_
 
 def __get_ood_strategy(odd_name, model, t=1.0, eps=0.01):
     
+    print(model)
+    
     ood_strategies = {
         "MaxSoftmax": MaxSoftmax(model=model, t=t),
         "ODIN": ODIN(model=model, eps=eps, temperature=t),
