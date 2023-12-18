@@ -21,10 +21,10 @@ torch.cuda.empty_cache()
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('-d','--dataset', help='databaset path', required=False)
 parser.add_argument('-dv','--dataset_csv', help='databaset csv file', required=False)
-parser.add_argument('-m', '--model_name', help="model to training name: resnet50 or resnet18", required=False)
 parser.add_argument('-r', '--as_rgb', action="store_true", required=False)
 parser.add_argument('-au', '--as_augmentation', action="store_true", required=False)
 parser.add_argument("-t", "--test_size", required=False)
+parser.add_argument("-mn", "--model_name")
 parser.add_argument("-e", "--exp_num")
 parser.add_argument("-ep", "--epochs")
 parser.add_argument('-dm','--dataset_name', help='databaset name')
@@ -74,24 +74,24 @@ if __name__ == '__main__':
         print(f"Number of class: {str(num_class)}")
         
         #models selected
-        arquitetures_pretrained = {
-                                "resnet50" : models_load.make_model_pretrained("resnet50", num_class),
-                                #"resnet18" : models_load.make_model_pretrained("resnet18", num_class),
-                                "densenet" : models_load.make_model_pretrained("densenet", num_class),
-                                "vgg16" : models_load.make_model_pretrained("vgg16", num_class),
-                                "vgg19" : models_load.make_model_pretrained("vgg19", num_class),
-                                #"efficientnet" : models_load.make_model_pretrained("efficientnet", num_class),
-                                "inceptionv3" : models_load.make_model_pretrained("inceptionv3", num_class),
-                            }
+        # arquitetures_pretrained = {
+        #                         "resnet50" : models_load.make_model_pretrained("resnet50", num_class),
+        #                         #"resnet18" : models_load.make_model_pretrained("resnet18", num_class),
+        #                         "densenet" : models_load.make_model_pretrained("densenet", num_class),
+        #                         "vgg16" : models_load.make_model_pretrained("vgg16", num_class),
+        #                         "vgg19" : models_load.make_model_pretrained("vgg19", num_class),
+        #                         #"efficientnet" : models_load.make_model_pretrained("efficientnet", num_class),
+        #                         "inceptionv3" : models_load.make_model_pretrained("inceptionv3", num_class),
+        #                     }
         
         #model_config = models_load.make_model_pretrained(model_name, num_class)
         
         #train_model = {}
         #test_model = {}
-        for model_name, model_config in arquitetures_pretrained.items():
-            #model_select = models_load.make_model_pretrained(model_name, num_class)
-            print("\nNetwork: "+ model_name + " is training...\n")
-            results = train_with_pytorch.run_model(exp_num=exp_num,model=model_config, model_name=model_name, 
+        #for model_name, model_config in arquitetures_pretrained.items():
+        model_config = models_load.make_model_pretrained(model_name, num_class)
+        print("\nNetwork: "+ model_name + " is training...\n")
+        results = train_with_pytorch.run_model(exp_num=exp_num,model=model_config, model_name=model_name, 
                                                                     database_name=database_name, train=train, test=test, 
                                                                     learning_rate=learning_rate, num_epochs=num_epochs, num_class=num_class)
                     # train_with_pytorch.run_model(model=model_select,ls
@@ -100,7 +100,7 @@ if __name__ == '__main__':
                     #                            image_size=image_size)
                     #train_model[model_name] = 
                     
-            results_metrics = pd.concat([results_metrics, results])
+        results_metrics = pd.concat([results_metrics, results])
                 
         print(results_metrics)
         if os.path.exists("../metrics/results_{}.csv".format(database_name)):

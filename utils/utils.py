@@ -141,7 +141,7 @@ def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,1
         ])
         
         if test_size is None:
-            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="val")
+            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Val")
             
             num_class = len(val.cl_name.values())
             
@@ -153,7 +153,7 @@ def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,1
             
             num_class = len(data.cl_name.values())
             
-            index_num = int(np.floor(0.1*len(test)))
+            index_num = int(np.floor(percentage_attacked*len(test)))
             val_index = test[len(test)-index_num:]
             
             sampler_val = Subset(data, val_index)
@@ -201,7 +201,6 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             
             train_loader = DataLoader(sub_train, batch_size=batch_size, num_workers=4, shuffle=True)
             test_loader = DataLoader(sub_test, batch_size=batch_size, num_workers=4, shuffle=False)
-
 
         return train_loader, test_loader, num_class
 

@@ -55,8 +55,8 @@ class PytorchTrainingAndTest:
                                 )
             
         #initate callbacks to execute the training
-        #callbacks=[early_stop_callback, ckp, timer]
-        callbacks=[ckp, timer]
+        callbacks=[early_stop_callback, ckp, timer]
+        #callbacks=[ckp, timer]
         
         #define the function to save the logs
         logger = CSVLogger(save_dir="../metrics/logs/", name="{}-{}".format(model_name, database_name), version=exp_num)

@@ -76,7 +76,7 @@ def __get_adv_attack(attack_name, data_loader, classifier, eps):
 def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, input_size, attack_name, eps, batch_size, lr, save_metrics_path, is_logits_save=False, is_features_save=False):    
         
     #1st read validation dataset to attack the model
-    val_attack_dataset, num_class = utils.load_attacked_database_df(root_path=root_path, csv_path=csv_path, batch_size=batch_size, image_size=input_size, percentage_attacked=0.2, test_size=0.3)
+    val_attack_dataset, num_class = utils.load_attacked_database_df(root_path=root_path, csv_path=csv_path, batch_size=batch_size, image_size=input_size)
 
     #2nd read models from checkpoints
     model_path = os.path.join(weights_path, "{}-{}-exp0.ckpt".format(model_name, dataset_name))
