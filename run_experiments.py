@@ -35,9 +35,9 @@ if __name__ == '__main__':
     #2nd define parameters
     batch_size = 32
     lr = 0.0001
-    models = ["resnet50", "vgg16", "vgg19", "inceptionv3", "efficientnet", "densenet"]
-    attacks = ["FGSM", "PGD", "UAP", "DeepFool", "CW"] #["FGSM", "PGD", "UAP"]
-    epsilons = [0.001, 0.01, 0.05, 0.1, 0.5]
+    models = ["resnet50"] #["resnet50", "vgg16", "vgg19", "inceptionv3", "efficientnet", "densenet"]
+    attacks = ["FGSM"]    #["FGSM", "PGD", "UAP", "DeepFool", "CW"]
+    epsilons = [0.001]    #[0.001, 0.01, 0.05, 0.1, 0.5]
     
     for model_name in models:
         print("Starting attack for model {}...".format(model_name))
@@ -48,15 +48,17 @@ if __name__ == '__main__':
                 print("The eps is {}".format(str(eps)))
                 #5th run attack
                 generate_attacks.run_attack(root_path=root_path, 
-                                               dataset_name=dataset_name, 
-                                               csv_path=csv_path, 
-                                               weights_path=weights_path, 
-                                               model_name=model_name,
-                                               input_size=input_size,
-                                               attack_name=attack_name, 
-                                               eps=eps, 
-                                               batch_size=batch_size, 
-                                               lr=lr,
-                                               save_metrics_path="./metrics")
+                                            dataset_name=dataset_name, 
+                                            csv_path=csv_path, 
+                                            weights_path=weights_path, 
+                                            model_name=model_name,
+                                            input_size=input_size,
+                                            attack_name=attack_name, 
+                                            eps=eps, 
+                                            batch_size=batch_size, 
+                                            lr=lr,
+                                            save_metrics_path="./metrics",
+                                            is_logits_save=False,
+                                            is_features_save=True)
     
     

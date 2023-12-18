@@ -3,9 +3,34 @@ import pandas as pd
 import numpy as np
 
 from torchmetrics import Accuracy, Recall, Specificity, Precision, F1Score, AUROC
-from sklearn.metrics import roc_auc_score
+from torchvision.models.feature_extraction import get_graph_node_names
+from torchvision.models.feature_extraction import create_feature_extractor
 
-def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
+def __get_last_layer_features(model, model_name, image):
+    
+    # feature_extractor = torch.nn.Sequential(*list(model.children())[:-1])
+    
+    # features = feature_extractor(image)
+        
+    # return features.detach().cpu().numpy()
+    
+    last_layer = {
+        "resnet50": 'layer4.2.conv3',
+        "vgg16": "features.24",
+        "vgg19": "features.34",
+        "efficientnet": "features.7.0.block.0",
+        "densenet": "features.denseblock4.denselayer16.conv2"
+    }
+    
+    #_, eval_nodes = get_graph_node_names(model)
+    model_feat = create_feature_extractor(model, return_nodes=[last_layer[model_name]])
+    features_dict = model_feat(image)
+    
+    features = list(features_dict.items())[-1][-1]
+    
+    return features.detach().cpu().numpy()
+
+def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
     
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     #3rd predict attacked images
@@ -17,8 +42,8 @@ def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
     adv_auc = AUROC(task="binary") if not nb_class > 2 else AUROC(task="multiclass", num_classes=nb_class, average="macro")
     val_auc = AUROC(task="binary") if not nb_class > 2 else AUROC(task="multiclass", num_classes=nb_class, average="macro")
     
-    logits_clean  = []
-    logits_adv = []
+    logits_clean, logits_adv  = [], []
+    feat_clean, feat_adv = [], []
     
     model.eval()
     with torch.no_grad():
@@ -27,11 +52,19 @@ def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
             x_clean, y_clean = data_clean
             x_clean, y_clean = x_clean.to(device), y_clean.to(device)
             pred_clean = model(x_clean)
+            
+            #get logits
             logits_clean.append(pred_clean.detach().cpu().numpy())
+            
+            #calculate metrics for clean
             y_clean = y_clean if nb_class > 2 else y_clean.view(-1, 1).float()
             y_pred = torch.argmax(pred_clean, dim=1) if nb_class > 2 else torch.argmax(pred_clean, dim=1).view(-1, 1).float()
             y_prob = torch.softmax(pred_clean, dim=1) if nb_class > 2 else torch.sigmoid(pred_clean)
             
+            #get features clean
+            feat_clean.append(__get_last_layer_features(model, model_name, x_clean))
+            
+            #calcualte metrics for clean
             accuracy_clean = np.sum(y_pred.cpu().numpy() == y_clean.cpu().numpy()) / len(y_clean)
             avg_accuracy_clean.append(accuracy_clean)
             val_auc(y_prob, y_clean)
@@ -41,16 +74,24 @@ def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
             x_adv, y_adv = data_adv
             x_adv, y_adv = x_adv.to(device), y_adv.to(device)
             pred_adv = model(x_adv)
+            
+            #get logits for adv
             logits_adv.append(pred_adv.detach().cpu().numpy())
+            
+            #calcualte metrics for adv
             y_adv = y_adv if nb_class > 2 else y_adv.view(-1, 1).float()
             y_pred = torch.argmax(pred_adv, dim=1) if nb_class > 2 else torch.argmax(pred_adv, dim=1).view(-1, 1).float()
             y_prob = torch.softmax(pred_adv, dim=1) if nb_class > 2 else torch.sigmoid(pred_adv)
- 
+            
+            #get features
+            feat_adv.append(__get_last_layer_features(model, model_name, x_adv))
+
+            #calculate metrics for adv
             accuracy_adv = np.sum(y_pred.cpu().numpy() == y_adv.cpu().numpy()) / len(y_adv)
             avg_accuracy_adv.append(accuracy_adv)
             adv_auc(y_prob, y_adv)
-            
             avg_auc_adv.append(adv_auc.compute().cpu().numpy())
+            
             #evaluate the attack sucess rate (asr)
             asr.append(1 - accuracy_adv)
         
@@ -64,5 +105,7 @@ def evaluate_model(model, dataset_clean, dataset_adv, nb_class):
     
     logits_clean = np.asanyarray(logits_clean)
     logits_adv = np.asanyarray(logits_adv)
+    feat_clean = np.asanyarray(feat_clean)
+    feat_adv = np.asanyarray(feat_adv)
     
-    return epochs_metrics, logits_clean, logits_adv
+    return epochs_metrics, logits_clean, logits_adv, feat_clean, feat_adv
