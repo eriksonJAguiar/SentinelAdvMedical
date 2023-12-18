@@ -52,6 +52,7 @@ def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
             x_clean, y_clean = data_clean
             x_clean, y_clean = x_clean.to(device), y_clean.to(device)
             pred_clean = model(x_clean)
+            print(pred_clean.shape)
             
             #get logits
             logits_clean.append(pred_clean.detach().cpu().numpy())
