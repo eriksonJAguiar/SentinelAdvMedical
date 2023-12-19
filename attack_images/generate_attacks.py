@@ -151,4 +151,6 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
         
         with open(os.path.join(save_metrics_path, "features", "adv_feat_{}_{}_{}.npy".format(model_name, attack_name, str(eps))), "wb") as f:
             np.save(f, feat_adv, allow_pickle=True)
+            
+    return images, adv_images, true_labels
     

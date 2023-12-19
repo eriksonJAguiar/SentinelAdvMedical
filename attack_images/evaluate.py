@@ -28,7 +28,7 @@ def __get_last_layer_features(model, model_name, image):
     
     features = list(features_dict.items())[-1][-1]
     
-    return features.detach().cpu().numpy()
+    return features.detach().cpu()
 
 def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
     
@@ -52,10 +52,9 @@ def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
             x_clean, y_clean = data_clean
             x_clean, y_clean = x_clean.to(device), y_clean.to(device)
             pred_clean = model(x_clean)
-            print(pred_clean.shape)
             
             #get logits
-            logits_clean.append(pred_clean.detach().cpu().numpy())
+            logits_clean.append(pred_clean.detach().cpu())
             
             #calculate metrics for clean
             y_clean = y_clean if nb_class > 2 else y_clean.view(-1, 1).float()
@@ -77,7 +76,7 @@ def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
             pred_adv = model(x_adv)
             
             #get logits for adv
-            logits_adv.append(pred_adv.detach().cpu().numpy())
+            logits_adv.append(pred_adv.detach().cpu())
             
             #calcualte metrics for adv
             y_adv = y_adv if nb_class > 2 else y_adv.view(-1, 1).float()
@@ -104,9 +103,10 @@ def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
     epochs_metrics["val_auc_adv"] = avg_auc_adv
     epochs_metrics["asr"] = asr
     
-    logits_clean = np.asanyarray(logits_clean)
-    logits_adv = np.asanyarray(logits_adv)
-    feat_clean = np.asanyarray(feat_clean)
-    feat_adv = np.asanyarray(feat_adv)
+    #logits_clean = np.asanyarray(logits_clean)
+    logits_clean = torch.cat(logits_clean, dim=0).numpy()
+    logits_adv = torch.cat(logits_adv, dim=0).numpy()
+    feat_clean = torch.cat(feat_clean, dim=0).numpy()
+    feat_adv = torch.cat(feat_adv, dim=0).numpy()
     
     return epochs_metrics, logits_clean, logits_adv, feat_clean, feat_adv

@@ -1,10 +1,15 @@
 import sys
 sys.path.append('./attack_images')
+sys.path.append("./ood_analysis")
 
+from ood_analysis import odd_decting
 from attack_images import generate_attacks
 import torch
 import numpy as np
 import argparse
+import pandas as pd
+import os
+import time
 
 
 parser = argparse.ArgumentParser(description='')
@@ -35,9 +40,10 @@ if __name__ == '__main__':
     #2nd define parameters
     batch_size = 32
     lr = 0.0001
-    models = ["resnet50"] #["resnet50", "vgg16", "vgg19", "inceptionv3", "efficientnet", "densenet"]
-    attacks = ["FGSM"]    #["FGSM", "PGD", "UAP", "DeepFool", "CW"]
-    epsilons = [0.001]    #[0.001, 0.01, 0.05, 0.1, 0.5]
+    models = ["resnet50", "vgg16", "vgg19", "inceptionv3", "efficientnet", "densenet"]
+    attacks = ["FGSM", "PGD", "UAP", "DeepFool", "CW"]
+    epsilons = [0.001, 0.01, 0.05, 0.1, 0.5]
+    ood_strategy = ["MaxSoftmax","ODIN", "MaxLogit", "Energy", "Mahalanobis", "KNN"]
     
     for model_name in models:
         print("Starting attack for model {}...".format(model_name))
@@ -47,18 +53,43 @@ if __name__ == '__main__':
             for eps in epsilons: 
                 print("The eps is {}".format(str(eps)))
                 #5th run attack
-                generate_attacks.run_attack(root_path=root_path, 
-                                            dataset_name=dataset_name, 
-                                            csv_path=csv_path, 
-                                            weights_path=weights_path, 
-                                            model_name=model_name,
-                                            input_size=input_size,
-                                            attack_name=attack_name, 
-                                            eps=eps, 
-                                            batch_size=batch_size, 
-                                            lr=lr,
-                                            save_metrics_path="./metrics",
-                                            is_logits_save=False,
-                                            is_features_save=True)
+                images, adv_images, true_labels = generate_attacks.run_attack(root_path=root_path, 
+                                                                              dataset_name=dataset_name, 
+                                                                              csv_path=csv_path, 
+                                                                              weights_path=weights_path, 
+                                                                              model_name=model_name,
+                                                                              input_size=input_size,
+                                                                              attack_name=attack_name, 
+                                                                              eps=eps, 
+                                                                              batch_size=batch_size, 
+                                                                              lr=lr,
+                                                                              save_metrics_path="./metrics",
+                                                                              is_logits_save=True,
+                                                                              is_features_save=True)
+                
+                for ood in ood_strategy:
+                    time_odd = time.time()
+                    metrics_ood = odd_decting.odd_detector2(weights_path=weights_path,
+                                                        dataset_name=dataset_name,
+                                                        model_name=model_name,
+                                                        in_images=images, 
+                                                        out_images=adv_images, 
+                                                        batch_size=batch_size,
+                                                        ood_name=ood,
+                                                        eps=eps,
+                                                        nb_class=7)
+                    end_ood = time.time() - time_odd
+                    
+                    metrics_ood["OOD"] = ood
+                    metrics_ood["model"] = model_name
+                    metrics_ood["attack"] = attack_name
+                    metrics_ood["eps"] = eps
+                    metrics_ood["time"] = end_ood
+                    metrics_ood = {k:[v] for k,v in metrics_ood.items()}
+                    
+                    if os.path.exists("./metrics/metrics_ood.csv"):
+                        pd.DataFrame.from_dict(metrics_ood).to_csv("./metrics/metrics_ood.csv", index=False, header=False, mode="a")
+                    else:
+                        pd.DataFrame.from_dict(metrics_ood).to_csv("./metrics/metrics_ood.csv", index=False, header=True, mode="a")
     
     

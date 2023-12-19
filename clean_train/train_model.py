@@ -48,11 +48,11 @@ class PytorchTrainingAndTest:
             
         #Define callback to save the best model weights
         ckp = ModelCheckpoint(dirpath="trained-weights", 
-                                  filename="{}-{}-exp{}".format(model_name, database_name, exp_num), 
-                                  save_top_k=1, 
-                                  mode="max", 
-                                  monitor="val_acc",
-                                )
+                              filename="{}-{}-exp{}".format(model_name, database_name, exp_num), 
+                              save_top_k=1, 
+                              mode="max", 
+                              monitor="val_acc",
+                              )
             
         #initate callbacks to execute the training
         callbacks=[early_stop_callback, ckp, timer]
