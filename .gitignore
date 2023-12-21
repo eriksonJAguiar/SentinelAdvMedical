@@ -10,3 +10,4 @@ test_*
 *.ipynb
 env-ood
 include
+*.csv

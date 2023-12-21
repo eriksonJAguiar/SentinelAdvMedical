@@ -13,3 +13,4 @@ seaborn
 tensorboard
 adversarial-robustness-toolbox
 pytorch-ood
+umap

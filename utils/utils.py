@@ -90,77 +90,47 @@ def load_images_path(img_dir, image_size = (128, 128)):
         
         return database
 
-def load_database_kf(path_image, batch_size, image_size=(128,128), n_folds=5, csv_path=None):
-        tf_image = transforms.Compose([#transforms.ToPILImage(),
+def load_database_kf(root_path, batch_size, image_size=(128,128), n_folds=5, csv_path=None, is_agumentation=False):
+        if is_agumentation:
+            tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
-                                       transforms.RandomHorizontalFlip(0.3),
-                                       transforms.RandomVerticalFlip(0.3),
-                                       transforms.RandomAffine(degrees = 0, translate = (0.2, 0.2)),
+                                       transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                                        transforms.ToTensor(),
-                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                                       #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                                       transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                                     ])
+        else:
+            tf_image = transforms.Compose([
+                transforms.Resize(image_size),
+                transforms.ToTensor(),
+                #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
         
-        kf = KFold(n_splits=n_folds, shuffle=True)
+        kf = KFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
         #kf = StratifiedKFold(n_splits=n_folds)
         train_loader, test_loader = {}, {}
         database = None
         num_class = 0
         if csv_path is None:
-            database = datasets.ImageFolder(path_image, transform=tf_image)
-            num_class = len(os.listdir(path_image))
+            database = datasets.ImageFolder(root_path, transform=tf_image)
+            num_class = len(os.listdir(root_path))
         else:
-            database = CustomDatasetFromCSV(root=path_image, tf_image=tf_image, csv_name=csv_path)
+            database = CustomDatasetFromCSV(path_root=root_path, tf_image=tf_image, csv_name=csv_path)
             num_class = len(database.cl_name.values())
         
         for i, (train_index, test_index) in enumerate(kf.split(database)):
                 
                 train_sampler = SubsetRandomSampler(train_index)
+                #idx = int(len(test_index)*0.1)
                 test_sampler = SubsetRandomSampler(test_index)
+                #val_sampler = SubsetRandomSampler(test_index[0:idx])
                 
-                train_loader[i] = DataLoader(database, batch_size=batch_size, sampler=train_sampler, num_workers=8)
-                test_loader[i] = DataLoader(database, batch_size=batch_size, sampler=test_sampler, num_workers=8)
-        
-        # print("Database report: \n")
-        # train_loader = thutils.data.DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
-        # print(train_data)
-
-        # test_loader = thutils.data.DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False)
-        # print(test_data)
-
-        # val_loader = thutils.data.DataLoader(dataset=val_data, batch_size=batch_size, shuffle=False)
-        # print(val_data)
+                train_loader[i] = DataLoader(database, batch_size=batch_size, sampler=train_sampler, num_workers=4)
+                test_loader[i] = DataLoader(database, batch_size=batch_size, sampler=test_sampler, num_workers=4)
+                #val_loader[i] = DataLoader(database, batch_size=batch_size, sampler=val_sampler, num_workers=4)
 
         return train_loader, test_loader, num_class
-
-def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,128), percentage_attacked=0.1, test_size=None):
-        tf_image = transforms.Compose([
-                transforms.Resize(image_size),
-                transforms.ToTensor(),
-                #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
-                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
-        
-        if test_size is None:
-            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Val")
-            
-            num_class = len(val.cl_name.values())
-            
-            val_loader = DataLoader(val, batch_size=batch_size, num_workers=4, shuffle=False)
-        else:
-            data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path)
-            
-            train, test = train_test_split(list(range(len(data))), test_size=test_size, random_state=RANDOM_SEED)
-            
-            num_class = len(data.cl_name.values())
-            
-            index_num = int(np.floor(percentage_attacked*len(test)))
-            val_index = test[len(test)-index_num:]
-            
-            sampler_val = Subset(data, val_index)
-            
-            val_loader = DataLoader(sampler_val, batch_size=batch_size, num_workers=4, shuffle=False)
-
-        return val_loader, num_class
 
 def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_agumentation=False, test_size=None):
         if is_agumentation:

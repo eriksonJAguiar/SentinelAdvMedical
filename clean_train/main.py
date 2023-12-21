@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 import sys
-sys.path.insert(0, "../utils")
+sys.path.append("../utils")
 import utils
 
 #Update CUDA version
@@ -22,10 +22,10 @@ parser = argparse.ArgumentParser(description='')
 parser.add_argument('-d','--dataset', help='databaset path', required=False)
 parser.add_argument('-dv','--dataset_csv', help='databaset csv file', required=False)
 parser.add_argument('-r', '--as_rgb', action="store_true", required=False)
+parser.add_argument('-kf', '--as_kfold', action="store_true", required=False)
 parser.add_argument('-au', '--as_augmentation', action="store_true", required=False)
 parser.add_argument("-t", "--test_size", required=False)
 parser.add_argument("-mn", "--model_name")
-parser.add_argument("-e", "--exp_num")
 parser.add_argument("-ep", "--epochs")
 parser.add_argument('-dm','--dataset_name', help='databaset name')
 args = vars(parser.parse_args())
@@ -43,8 +43,8 @@ if __name__ == '__main__':
     num_epochs = int(args["epochs"])
     batch_size = 32
     test_size = None if args["test_size"] is None else float(args["test_size"])
-    number_experiments = int(args["exp_num"])
     as_aug = args["as_augmentation"]
+    as_kfold = args["as_kfold"]
     model_name = args["model_name"]
     #image_size = (224, 224)
     image_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
@@ -54,24 +54,27 @@ if __name__ == '__main__':
     csv_path = args["dataset_csv"]
     database_name = args["dataset_name"]
 
-    
       
     print("Database: {}".format(database_name))
-            
+    print("Loading database ...")
+    number_experiments = 1
+    
+    if as_kfold:
+        train, test, num_class = utils.load_database_kf(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, n_folds=5)
+        number_experiments = len(train)
+    elif not csv_path is None:
+        train, test, num_class = utils.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
+        utils.show_images(train, database_name, "../metrics/figures")
+            #train, test, num_class = utils.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
+    else:
+        train, test, num_class = utils.load_database(path=base_path, batch_size=batch_size, image_size=image_size, is_agumentation=as_aug)
+        utils.show_images(train, database_name, "../metrics/figures")
 
+    print(f"Number of class: {str(num_class)}")
+    
     results_metrics = pd.DataFrame()
     for exp_num in range(number_experiments):
         print(f"Starting experiment {exp_num+1}")
-        print("Loading database ...")
-        if not csv_path is None:
-            train, test, num_class = utils.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size,csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
-            utils.show_images(train, database_name, "../metrics/figures")
-            #train, test, num_class = utils.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
-        else:
-            train, test, num_class = utils.load_database(path=base_path, batch_size=batch_size, image_size=image_size, is_agumentation=as_aug)
-            utils.show_images(train, database_name, "../metrics/figures")
-
-        print(f"Number of class: {str(num_class)}")
         
         #models selected
         # arquitetures_pretrained = {
@@ -91,16 +94,30 @@ if __name__ == '__main__':
         #for model_name, model_config in arquitetures_pretrained.items():
         model_config = models_load.make_model_pretrained(model_name, num_class)
         print("\nNetwork: "+ model_name + " is training...\n")
-        results = train_with_pytorch.run_model(exp_num=exp_num,model=model_config, model_name=model_name, 
-                                                                    database_name=database_name, train=train, test=test, 
-                                                                    learning_rate=learning_rate, num_epochs=num_epochs, num_class=num_class)
-                    # train_with_pytorch.run_model(model=model_select,ls
-                    # model_name=model_name, database_name=database_name, train=train, test=test, 
-                    #                              learning_rate=learning_rate, num_epochs=num_epochs, num_class=num_class, batch_size=batch_size, 
-                    #                            image_size=image_size)
-                    #train_model[model_name] = 
+        results = None
+        if as_kfold:
+            results = train_with_pytorch.run_model(exp_num=exp_num,
+                                                model=model_config, 
+                                                model_name=model_name, 
+                                                database_name=database_name, 
+                                                train=train[exp_num], 
+                                                test=test[exp_num], 
+                                                learning_rate=learning_rate, 
+                                                num_epochs=num_epochs, 
+                                                num_class=num_class)
+        else:
+            results = train_with_pytorch.run_model(exp_num=exp_num,
+                                                model=model_config, 
+                                                model_name=model_name, 
+                                                database_name=database_name, 
+                                                train=train, 
+                                                test=test, 
+                                                learning_rate=learning_rate, 
+                                                num_epochs=num_epochs, 
+                                                num_class=num_class)    
                     
         results_metrics = pd.concat([results_metrics, results])
+        results_metrics["fold"] = exp_num
                 
         print(results_metrics)
         if os.path.exists("../metrics/results_{}.csv".format(database_name)):
