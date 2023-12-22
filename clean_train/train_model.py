@@ -40,7 +40,7 @@ class PytorchTrainingAndTest:
                                          lr=learning_rate)
         
         #define callback for earlystopping
-        early_stop_callback = EarlyStopping(monitor='val_loss', min_delta=0.01, patience=5, verbose=True, mode='min')
+        early_stop_callback = EarlyStopping(monitor='val_acc', min_delta=0.01, patience=10, verbose=True, mode='max')
         
         #define custom callback to calculate the train and test time 
         timer = CustomTimeCallback("../metrics/time/train_time_{}-{}.csv".format(model_name, database_name),

@@ -5,9 +5,13 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision.models as models
 import lightning as L
+import numpy as np
 from torch.nn import functional as F
 from torchmetrics import Accuracy, Recall, Specificity, Precision, F1Score, AUROC
 from lightning.pytorch.callbacks import Callback
+
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_auc_score
 
 class TrainModelLigthning(L.LightningModule):
     def __init__(self, model_pretrained, num_class, lr):
@@ -35,16 +39,6 @@ class TrainModelLigthning(L.LightningModule):
     def forward(self, x):
         return self.model(x)
     
-    def _shared_step_scaling(self, batch):
-        features, y_true = batch
-        y_true = y_true if self.num_class > 2 else y_true.view(-1, 1).float()
-        logits = self(features)
-        loss = self.criterion(logits, y_true)
-        y_pred = torch.argmax(logits, dim=1) if self.num_class > 2 else torch.argmax(logits, dim=1).view(-1, 1).float()
-        probs = torch.softmax(logits, dim=1) if self.num_class > 2 else torch.sigmoid(logits)
-
-        return loss, y_true, y_pred, probs
-    
     def _shared_step(self, batch):
         features, y_true = batch
         y_true = y_true if self.num_class > 2 else y_true.view(-1, 1).float()
@@ -68,7 +62,6 @@ class TrainModelLigthning(L.LightningModule):
         self.train_specificity.update(y_pred, y_true)
         self.train_f1.update(y_pred, y_true)
         self.train_auc.update(probs, y_true)
-        
         
         self.log('loss', loss, prog_bar=True)
         self.log('acc', self.train_accuracy.compute(), prog_bar=True, on_epoch=True, on_step=False)
@@ -127,10 +120,10 @@ class TrainModelLigthning(L.LightningModule):
         optimizer = optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
         #optimizer = optim.RMSprop(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
         #optimizer = optim.SGD(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
-        miletones = [0.5 * 100, 0.75 * 100]
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)
+        #miletones = [0.5 * 100, 0.75 * 100]
+        #scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)
         
-        return [optimizer], [scheduler]
+        return [optimizer]
 
 
 class CustomTimeCallback(Callback):
