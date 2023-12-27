@@ -11,6 +11,7 @@ lightning
 matplotlib
 seaborn
 tensorboard
+pl_crossvalidate
 adversarial-robustness-toolbox
 pytorch-ood
 umap

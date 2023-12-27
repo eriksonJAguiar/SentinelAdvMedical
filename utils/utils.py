@@ -90,7 +90,7 @@ def load_images_path(img_dir, image_size = (128, 128)):
         
         return database
 
-def load_database_kf(root_path, batch_size, image_size=(128,128), n_folds=5, csv_path=None, is_agumentation=False):
+def load_database_kf(root_path, batch_size, image_size=(128,128), csv_path=None, is_agumentation=False):
         if is_agumentation:
             tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
@@ -107,10 +107,10 @@ def load_database_kf(root_path, batch_size, image_size=(128,128), n_folds=5, csv
                 transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
             ])
         
-        kf = KFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
+        #kf = KFold(n_splits=n_folds, shuffle=True, random_state=RANDOM_SEED)
         #kf = StratifiedKFold(n_splits=n_folds)
-        train_loader, test_loader = {}, {}
-        database = None
+        #train_loader, test_loader = {}, {}
+        #database = None
         num_class = 0
         if csv_path is None:
             database = datasets.ImageFolder(root_path, transform=tf_image)
@@ -119,18 +119,18 @@ def load_database_kf(root_path, batch_size, image_size=(128,128), n_folds=5, csv
             database = CustomDatasetFromCSV(path_root=root_path, tf_image=tf_image, csv_name=csv_path)
             num_class = len(database.cl_name.values())
         
-        for i, (train_index, test_index) in enumerate(kf.split(database)):
+        #for i, (train_index, test_index) in enumerate(kf.split(database)):
                 
-                train_sampler = SubsetRandomSampler(train_index)
+                #train_sampler = SubsetRandomSampler(train_index)
                 #idx = int(len(test_index)*0.1)
-                test_sampler = SubsetRandomSampler(test_index)
+                #test_sampler = SubsetRandomSampler(test_index)
                 #val_sampler = SubsetRandomSampler(test_index[0:idx])
                 
-                train_loader[i] = DataLoader(database, batch_size=batch_size, sampler=train_sampler, num_workers=4)
-                test_loader[i] = DataLoader(database, batch_size=batch_size, sampler=test_sampler, num_workers=4)
+        train_loader = DataLoader(database, batch_size=batch_size, num_workers=4)
+                #test_loader[i] = DataLoader(database, batch_size=batch_size, sampler=test_sampler, num_workers=4)
                 #val_loader[i] = DataLoader(database, batch_size=batch_size, sampler=val_sampler, num_workers=4)
 
-        return train_loader, test_loader, num_class
+        return train_loader, num_class
 
 def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_agumentation=False, test_size=None):
         if is_agumentation:
@@ -161,11 +161,11 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             
             train, test = train_test_split(list(range(len(data))), test_size=test_size, shuffle=True, random_state=RANDOM_SEED)
             
-            index_num = int(np.floor(0.1*len(test)))
-            test_index = test[:len(test)-index_num]
+            # index_num = int(np.floor(0.1*len(test)))
+            # test_index = test[:len(test)-index_num]
             
             sub_train = Subset(data, train)
-            sub_test = Subset(data, test_index)
+            sub_test = Subset(data, test)
             
             num_class = len(data.cl_name.values())
             
@@ -182,6 +182,7 @@ def show_images(dataset_loader, db_name, path_to_save):
         db_name (_type_): _description_
 
     """
+    os.makedirs(path_to_save, exist_ok=True)
     batch = next(iter(dataset_loader))
     images, labels = batch
         

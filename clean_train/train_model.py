@@ -7,7 +7,7 @@ from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from lightning.pytorch.loggers import CSVLogger
 import matplotlib.pyplot as plt
 import lightning as L
-#from pl_crossvalidate import KFoldTrainer
+from pl_crossvalidate import KFoldTrainer
 
 if torch.cuda.is_available():  
   dev = "cuda:0" 
@@ -143,8 +143,8 @@ class PytorchTrainingAndTest:
                                 )
             
         #initate callbacks to execute the training
-        #callbacks=[early_stop_callback, ckp, timer]
-        callbacks=[ckp, timer]
+        callbacks=[early_stop_callback, ckp, timer]
+        #callbacks=[ckp, timer]
         
         #define the function to save the logs
         logger = CSVLogger(save_dir="../metrics/logs/", name="{}-{}".format(model_name, database_name), version=exp_num)
@@ -178,41 +178,42 @@ class PytorchTrainingAndTest:
             callbacks=callbacks
         )
         
-        trainer.cross_validate(
+        results = trainer.cross_validate(
           model=ligh_model,
           train_dataloader=train,
           val_dataloaders=test
         )
+        print(results)
         
-        metrics = trainer.logged_metrics
-        print(metrics)
+        # metrics = trainer.logged_metrics
+        # print(metrics)
             
-        results =  {
-                "exp_num": exp_num,
-                "model_name" : model_name,
-                "train_acc" : metrics["acc"].item(),
-                "train_f1-score": metrics["f1_score"].item(),
-                "train_loss":  metrics["loss"].item(),
-                "train_precision":  metrics["precision"].item(),
-                "train_recall" :  metrics["recall"].item(),
-                "train_auc":  metrics["auc"].item(),
-                "train_spc":  metrics["specificity"].item(),
-                "val_acc" :  metrics["val_acc"].item(),
-                "val_f1-score":  metrics["val_f1_score"].item(),
-                "val_loss":  metrics["val_loss"].item(),
-                "val_precision":  metrics["val_precision"].item(),
-                "val_recall" :  metrics["val_recall"].item(),
-                "val_auc":  metrics["val_auc"].item(),
-                "val_spc":  metrics["val_specificity"].item(),
-        }
-        results = {k:[v] for k,v in results.items()}
-        metrics_df = pd.DataFrame(results)
+        # results =  {
+        #         "exp_num": exp_num,
+        #         "model_name" : model_name,
+        #         "train_acc" : metrics["acc"].item(),
+        #         "train_f1-score": metrics["f1_score"].item(),
+        #         "train_loss":  metrics["loss"].item(),
+        #         "train_precision":  metrics["precision"].item(),
+        #         "train_recall" :  metrics["recall"].item(),
+        #         "train_auc":  metrics["auc"].item(),
+        #         "train_spc":  metrics["specificity"].item(),
+        #         "val_acc" :  metrics["val_acc"].item(),
+        #         "val_f1-score":  metrics["val_f1_score"].item(),
+        #         "val_loss":  metrics["val_loss"].item(),
+        #         "val_precision":  metrics["val_precision"].item(),
+        #         "val_recall" :  metrics["val_recall"].item(),
+        #         "val_auc":  metrics["val_auc"].item(),
+        #         "val_spc":  metrics["val_specificity"].item(),
+        # }
+        # results = {k:[v] for k,v in results.items()}
+        # metrics_df = pd.DataFrame(results)
         
-        metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
+        #metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
 
-        self.save_metrics_to_figure(metrics, model_name, database_name)
+        #self.save_metrics_to_figure(metrics, model_name, database_name)
         
-        return metrics_df
+        return results
       
     def save_metrics_to_figure(self, metrics, model_name, database_name):
         '''

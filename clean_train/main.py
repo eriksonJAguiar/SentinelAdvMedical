@@ -49,20 +49,17 @@ if __name__ == '__main__':
     #image_size = (224, 224)
     image_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
 
-
     base_path = args["dataset"]  
     csv_path = args["dataset_csv"]
     database_name = args["dataset_name"]
-
       
     print("Database: {}".format(database_name))
     print("Loading database ...")
-    number_experiments = 1
     
-    if as_kfold:
-        train, test, num_class = utils.load_database_kf(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, n_folds=5)
-        number_experiments = len(train)
-    elif not csv_path is None:
+    # if as_kfold:
+    #     train, num_class = utils.load_database_kf(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug)
+    #     utils.show_images(train, database_name, "../metrics/figures")
+    if not csv_path is None:
         train, test, num_class = utils.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
         utils.show_images(train, database_name, "../metrics/figures")
             #train, test, num_class = utils.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
@@ -72,9 +69,8 @@ if __name__ == '__main__':
 
     print(f"Number of class: {str(num_class)}")
     
-    results_metrics = pd.DataFrame()
-    for exp_num in range(number_experiments):
-        print(f"Starting experiment {exp_num+1}")
+    #for exp_num in range(number_experiments):
+    #print(f"Starting experiment {number_experiments+1}")
         
         #models selected
         # arquitetures_pretrained = {
@@ -92,37 +88,36 @@ if __name__ == '__main__':
         #train_model = {}
         #test_model = {}
         #for model_name, model_config in arquitetures_pretrained.items():
-        model_config = models_load.make_model_pretrained(model_name, num_class)
-        print("\nNetwork: "+ model_name + " is training...\n")
-        results = None
-        if as_kfold:
-            results = train_with_pytorch.run_model(exp_num=exp_num,
-                                                model=model_config, 
-                                                model_name=model_name, 
-                                                database_name=database_name, 
-                                                train=train[exp_num], 
-                                                test=test[exp_num], 
-                                                learning_rate=learning_rate, 
-                                                num_epochs=num_epochs, 
-                                                num_class=num_class)
-        else:
-            results = train_with_pytorch.run_model(exp_num=exp_num,
-                                                model=model_config, 
-                                                model_name=model_name, 
-                                                database_name=database_name, 
-                                                train=train, 
-                                                test=test, 
-                                                learning_rate=learning_rate, 
-                                                num_epochs=num_epochs, 
-                                                num_class=num_class)    
+    model_config = models_load.make_model_pretrained(model_name, num_class)
+    print("\nNetwork: "+ model_name + " is training...\n")
+    if as_kfold:
+        results = train_with_pytorch.run_model_kfold(exp_num=1,
+                                                    model=model_config, 
+                                                    model_name=model_name, 
+                                                    database_name=database_name, 
+                                                    train=train,
+                                                    test=test, 
+                                                    learning_rate=learning_rate, 
+                                                    num_epochs=num_epochs, 
+                                                    num_class=num_class)
+    else:
+        results = train_with_pytorch.run_model(exp_num=1,
+                                              model=model_config, 
+                                              model_name=model_name, 
+                                              database_name=database_name, 
+                                              train=train, 
+                                              test=test, 
+                                              learning_rate=learning_rate, 
+                                              num_epochs=num_epochs, 
+                                              num_class=num_class)
                     
-        results_metrics = pd.concat([results_metrics, results])
-        results_metrics["fold"] = exp_num
+    #results_metrics = pd.concat([results_metrics, results])
+    #results_metrics["fold"] = exp_num
                 
-        print(results_metrics)
-        if os.path.exists("../metrics/results_{}.csv".format(database_name)):
-            results_metrics.to_csv("../metrics/results_{}.csv".format(database_name), mode="a", header=None)
-        else:
-            results_metrics.to_csv("../metrics/results_{}.csv".format(database_name))
+    print(results)
+    if os.path.exists("../metrics/results_{}.csv".format(database_name)):
+        results.to_csv("../metrics/results_{}.csv".format(database_name), mode="a", header=None)
+    else:
+        results.to_csv("../metrics/results_{}.csv".format(database_name))
         
         
