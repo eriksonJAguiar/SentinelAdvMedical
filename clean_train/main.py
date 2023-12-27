@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser(description='')
 parser.add_argument('-d','--dataset', help='databaset path', required=False)
 parser.add_argument('-dv','--dataset_csv', help='databaset csv file', required=False)
 parser.add_argument('-r', '--as_rgb', action="store_true", required=False)
-parser.add_argument('-kf', '--as_kfold', action="store_true", required=False)
+parser.add_argument('-kf', '--kfold', help="number of folds",required=False)
 parser.add_argument('-au', '--as_augmentation', action="store_true", required=False)
 parser.add_argument("-t", "--test_size", required=False)
 parser.add_argument("-mn", "--model_name")
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     batch_size = 32
     test_size = None if args["test_size"] is None else float(args["test_size"])
     as_aug = args["as_augmentation"]
-    as_kfold = args["as_kfold"]
+    kfold = int(args["kfold"]) if not args["kfold"] is None else None
     model_name = args["model_name"]
     #image_size = (224, 224)
     image_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
@@ -56,10 +56,10 @@ if __name__ == '__main__':
     print("Database: {}".format(database_name))
     print("Loading database ...")
     
-    # if as_kfold:
-    #     train, num_class = utils.load_database_kf(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug)
-    #     utils.show_images(train, database_name, "../metrics/figures")
-    if not csv_path is None:
+    if not kfold is None:
+        train, test, num_class = utils.load_database_kf(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, n_folds=kfold)
+        utils.show_images(train[0], database_name, "../metrics/figures")
+    elif not csv_path is None:
         train, test, num_class = utils.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
         utils.show_images(train, database_name, "../metrics/figures")
             #train, test, num_class = utils.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
@@ -90,7 +90,7 @@ if __name__ == '__main__':
         #for model_name, model_config in arquitetures_pretrained.items():
     model_config = models_load.make_model_pretrained(model_name, num_class)
     print("\nNetwork: "+ model_name + " is training...\n")
-    if as_kfold:
+    if not kfold is None:
         results = train_with_pytorch.run_model_kfold(exp_num=1,
                                                     model=model_config, 
                                                     model_name=model_name, 
