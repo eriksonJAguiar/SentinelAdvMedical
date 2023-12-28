@@ -46,6 +46,7 @@ if __name__ == '__main__':
     as_aug = args["as_augmentation"]
     kfold = int(args["kfold"]) if not args["kfold"] is None else None
     model_name = args["model_name"]
+    as_rgb = args["as_rgb"]
     #image_size = (224, 224)
     image_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
 
@@ -57,10 +58,10 @@ if __name__ == '__main__':
     print("Loading database ...")
     
     if not kfold is None:
-        train, test, num_class = utils.load_database_kf(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, n_folds=kfold)
+        train, test, num_class = utils.load_database_kf(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, n_folds=kfold, as_rgb=as_rgb)
         utils.show_images(train[0], database_name, "../metrics/figures")
     elif not csv_path is None:
-        train, test, num_class = utils.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, test_size=test_size)
+        train, test, num_class = utils.load_database_df(root_path=base_path, batch_size=batch_size, image_size=image_size, csv_path=csv_path, is_agumentation=as_aug, test_size=test_size, as_rgb=as_rgb)
         utils.show_images(train, database_name, "../metrics/figures")
             #train, test, num_class = utils.load_database_kf(path_image=base_path, batch_size=batch_size, image_size=image_size,  n_folds=5, csv_path=csv_path)
     else:

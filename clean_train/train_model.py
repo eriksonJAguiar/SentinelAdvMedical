@@ -39,14 +39,14 @@ class PytorchTrainingAndTest:
                                          lr=learning_rate)
         
         #define callback for earlystopping
-        early_stop_callback = EarlyStopping(monitor='val_acc', min_delta=0.01, patience=10, verbose=True, mode='max')
+        early_stop_callback = EarlyStopping(monitor='val_acc', min_delta=0.01, patience=5, verbose=True, mode='max')
         
         #define custom callback to calculate the train and test time 
         timer = CustomTimeCallback("../metrics/time/train_time_{}-{}.csv".format(model_name, database_name),
                                        "../metrics/time/test_time_{}-{}.csv".format(model_name, database_name))
             
         #Define callback to save the best model weights
-        ckp = ModelCheckpoint(dirpath="trained-weights", 
+        ckp = ModelCheckpoint(dirpath="../metrics/logs/", 
                               filename="{}-{}-exp{}".format(model_name, database_name, exp_num), 
                               save_top_k=1, 
                               mode="max", 
@@ -108,19 +108,23 @@ class PytorchTrainingAndTest:
         return metrics_df
     
     def run_model_kfold(self, exp_num, model, model_name, database_name, train, test, learning_rate, num_epochs, num_class=2, num_folds=5):
-        '''
-          function to train the model using pytorch lightning
-          params:
-            - exp_num: num of experiments to run a model
-            - model: architecture pre-trained that trained on dataset
-            - database_name: string that describe the databaset to train a model
-            - train: dataloader of the train
-            - test: dataloader of the test
-            - learning_rate: float to define a learning rate of the model optimization
-            - num_epochs: number maximium of epoch during the trainning
-            - num_class: class number on dataset
-        '''
-        
+        """function to train the model using pytorch lightning
+
+        Args:
+            exp_num (int): num of experiments to run a model
+            model (toch.nn.Module): architecture pre-trained that trained on dataset
+            model_name (str): string that describe the model name
+            database_name (str): string that describe the databaset to train a model
+            train (Dataloader): dataloader of the train
+            test (Dataloader): dataloader of the test
+            learning_rate (float): learning rate of the model optimization
+            num_epochs (int): number maximium of epoch during the trainning
+            num_class (int, optional): number of class. Defaults to 2.
+            num_folds (int, optional): number of folds on cross validation. Defaults to 5.
+
+        Returns:
+            pandas.DataFrame: dataframe of metrics for training and testing
+        """
         #init model using a pytorch lightining call
         ligh_model = TrainModelLigthning(model_pretrained=model, 
                                          num_class=num_class, 
@@ -133,17 +137,18 @@ class PytorchTrainingAndTest:
         timer = CustomTimeCallback("../metrics/time/train_time_{}-{}.csv".format(model_name, database_name),
                                        "../metrics/time/test_time_{}-{}.csv".format(model_name, database_name))
             
+        metrics_final = pd.DataFrame()
         for i in range(num_folds):
           #Define callback to save the best model weights
           print("===== Starting fold {}/{} =====".format(i+1, num_folds))
           #define the function to save the logs
           logger = CSVLogger(save_dir="../metrics/logs/", name="{}-{}-fold{}".format(model_name, database_name,i), version=exp_num)
           ckp = ModelCheckpoint(dirpath=f"../metrics/logs/fold{i}", 
-                                    filename="{}-{}-fold{}".format(model_name, database_name, i), 
-                                    save_top_k=1, 
-                                    mode="max", 
-                                    monitor="val_acc",
-                                  )
+                                filename="{}-{}-fold{}".format(model_name, database_name, i), 
+                                save_top_k=1, 
+                                mode="max", 
+                                monitor="val_acc",
+                                )
               
           #initate callbacks to execute the training
           callbacks=[early_stop_callback, ckp, timer]
@@ -153,7 +158,6 @@ class PytorchTrainingAndTest:
               max_epochs= num_epochs,
               accelerator="gpu",
               devices="auto",
-              min_epochs=5,
               log_every_n_steps=10,
               logger=logger,
               deterministic=False,
@@ -190,12 +194,14 @@ class PytorchTrainingAndTest:
           }
           results = {k:[v] for k,v in results.items()}
           metrics_df = pd.DataFrame(results)
+          metrics_final = pd.concat([metrics_final, metrics_df])
+          print(metrics_final)
         
-          metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
+          #metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
 
-          self.save_metrics_to_figure(metrics, model_name, database_name, fold=i)
+          #self.save_metrics_to_figure(metrics, model_name, database_name, fold=i)
         
-        return metrics_df
+        return metrics_final
       
     def save_metrics_to_figure(self, metrics, model_name, database_name, fold=1):
         '''

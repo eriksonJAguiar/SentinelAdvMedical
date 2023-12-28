@@ -90,11 +90,16 @@ def load_images_path(img_dir, image_size = (128, 128)):
         
         return database
 
-def load_database_kf(root_path, batch_size, image_size=(128,128), csv_path=None, is_agumentation=False, n_folds=5):
+def load_database_kf(root_path, batch_size, image_size=(128,128), csv_path=None, is_agumentation=False, n_folds=5, as_rgb=False):
         if is_agumentation:
             tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
-                                       transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.IMAGENET),
+                                       #transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
+                                       transforms.RandomHorizontalFlip(),
+                                       transforms.RandomVerticalFlip(),
+                                       transforms.RandomRotation(30),
+                                       transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+                                       transforms.RandomResizedCrop(224),
                                        transforms.ToTensor(),
                                        #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -116,14 +121,16 @@ def load_database_kf(root_path, batch_size, image_size=(128,128), csv_path=None,
             database = datasets.ImageFolder(root_path, transform=tf_image)
             num_class = len(os.listdir(root_path))
         else:
-            database = CustomDatasetFromCSV(path_root=root_path, tf_image=tf_image, csv_name=csv_path)
+            database = CustomDatasetFromCSV(path_root=root_path, tf_image=tf_image, csv_name=csv_path, as_rgb=as_rgb)
             num_class = len(database.cl_name.values())
         
         for i, (train_index, test_index) in enumerate(kf.split(database)):
                 
+                #train = Subset(database, train_index)
                 train_sampler = SubsetRandomSampler(train_index)
-                #idx = int(len(test_index)*0.1)
                 test_sampler = SubsetRandomSampler(test_index)
+                #idx = int(len(test_index)*0.1)
+                #test = Subset(database, test_index)
                 #val_sampler = SubsetRandomSampler(test_index[0:idx])
                 
                 train_loader[i] = DataLoader(database, batch_size=batch_size, sampler=train_sampler, num_workers=4)
@@ -132,11 +139,16 @@ def load_database_kf(root_path, batch_size, image_size=(128,128), csv_path=None,
 
         return train_loader, test_loader, num_class
 
-def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_agumentation=False, test_size=None):
+def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_agumentation=False, test_size=None, as_rgb=False):
         if is_agumentation:
             tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
                                        transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
+                                    #    transforms.RandomHorizontalFlip(),
+                                    #    transforms.RandomVerticalFlip(),
+                                    #    transforms.RandomRotation(30),
+                                    #    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+                                    #    transforms.RandomResizedCrop(224),
                                        transforms.ToTensor(),
                                        #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -150,27 +162,27 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             ])
         
         if test_size is None:
-            train = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Train")
-            test = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test")
+            train = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Train", as_rgb=as_rgb)
+            test = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test", as_rgb=as_rgb)
             num_class = len(train.cl_name.values())
             
             train_loader = DataLoader(train, batch_size=batch_size, num_workers=4, shuffle=True)
             test_loader = DataLoader(test, batch_size=batch_size, num_workers=4, shuffle=False)
         else:
-            data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path)
+            data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, as_rgb=as_rgb)
             
             train, test = train_test_split(list(range(len(data))), test_size=test_size, shuffle=True, random_state=RANDOM_SEED)
             
             # index_num = int(np.floor(0.1*len(test)))
             # test_index = test[:len(test)-index_num]
             
-            sub_train = Subset(data, train)
-            sub_test = Subset(data, test)
+            train_sampler = SubsetRandomSampler(train)
+            test_sampler = SubsetRandomSampler(test)
             
             num_class = len(data.cl_name.values())
             
-            train_loader = DataLoader(sub_train, batch_size=batch_size, num_workers=4, shuffle=True)
-            test_loader = DataLoader(sub_test, batch_size=batch_size, num_workers=4, shuffle=False)
+            train_loader = DataLoader(data, batch_size=batch_size, sampler=train_sampler, num_workers=4)
+            test_loader = DataLoader(data, batch_size=batch_size, sampler=test_sampler, num_workers=4)
 
         return train_loader, test_loader, num_class
 
@@ -377,8 +389,9 @@ def dataloader_to_numpy(dataloader):
     return images, labels
 
 class CustomDatasetFromCSV(Dataset):
-    def __init__(self, path_root, tf_image, csv_name, task=None):
+    def __init__(self, path_root, tf_image, csv_name, as_rgb=False, task=None):
         self.data = pd.read_csv(csv_name)
+        self.as_rgb = as_rgb
         if task is not None:
             self.data.query("Task == @task", inplace=True)
         self.tf_image = tf_image
@@ -397,7 +410,7 @@ class CustomDatasetFromCSV(Dataset):
         x_path = os.path.join(self.root, self.data.iloc[idx, 0])
         y = self.cl_name[self.data.iloc[idx, 1]]
         
-        X = Image.open(x_path).convert("RGB")
+        X = Image.open(x_path).convert("RGB") if self.as_rgb else Image.open(x_path)
  
         if self.tf_image:
             X = self.tf_image(X)
