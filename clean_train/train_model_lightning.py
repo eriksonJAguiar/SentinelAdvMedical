@@ -9,6 +9,7 @@ import numpy as np
 from torch.nn import functional as F
 from torchmetrics import Accuracy, Recall, Specificity, Precision, F1Score, AUROC
 from lightning.pytorch.callbacks import Callback
+from balanced_loss import Loss
 
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_auc_score
@@ -20,7 +21,7 @@ class TrainModelLigthning(L.LightningModule):
         self.lr = lr
         self.num_class = num_class
         self.criterion = torch.nn.CrossEntropyLoss() if self.num_class > 2 else torch.nn.BCEWithLogitsLoss()
-        #self.criterion = FocalLoss(gamma=2.0)
+        #self.criterion = Loss(loss_type="focal_loss", fl_gamma=5, class_balanced=True, samples_per_class=[327, 514, 1099, 115, 1113, 6705, 142])
         
         self.train_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
         self.val_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
@@ -118,14 +119,14 @@ class TrainModelLigthning(L.LightningModule):
         return loss
         
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
+        optimizer = optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=1e-3)
         #optimizer = optim.RMSprop(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
         #optimizer = optim.SGD(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
-        miletones = [0.5 * 100, 0.75 * 100]
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)
+        #miletones = [0.5 * 100, 0.75 * 100]
+        #scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)
         #scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.3, total_iters=10)
         
-        return [optimizer], [scheduler]
+        return [optimizer]
 
 
 class CustomTimeCallback(Callback):
@@ -157,29 +158,3 @@ class CustomTimeCallback(Callback):
         
         with open(self.file_test, "a") as f:
             f.write("{}\n".format(total))
-
-
-class FocalLoss(torch.nn.Module):
-    ''' 
-        The focal loss method was extracted from: https://github.com/clcarwin/focal_loss_pytorch
-    '''
-    def __init__(self, gamma=0):
-        super(FocalLoss, self).__init__()
-        self.gamma = gamma
-    
-    def forward(self, input, target):
-        if input.dim() > 2:
-            input = input.view(input.size(0),input.size(1),-1)
-            input = input.transpose(1, 2)
-            input = input.contiguous().view(-1,input.size(2))
-        
-        target = target.view(-1,1)
-
-        logpt = F.log_softmax(input)
-        logpt = logpt.gather(1,target)
-        logpt = logpt.view(-1)
-        pt = torch.autograd.Variable(logpt.data.exp())
-        
-        loss = -1 * (1-pt)**self.gamma * logpt
-        
-        return loss.mean()

@@ -46,7 +46,7 @@ class PytorchTrainingAndTest:
                                        "../metrics/time/test_time_{}-{}.csv".format(model_name, database_name))
             
         #Define callback to save the best model weights
-        ckp = ModelCheckpoint(dirpath="../metrics/logs/", 
+        ckp = ModelCheckpoint(dirpath="../metrics/logs/hold-out", 
                               filename="{}-{}-exp{}".format(model_name, database_name, exp_num), 
                               save_top_k=1, 
                               mode="max", 
@@ -58,7 +58,7 @@ class PytorchTrainingAndTest:
         #callbacks=[ckp, timer]
         
         #define the function to save the logs
-        logger = CSVLogger(save_dir="../metrics/logs/", name="{}-{}".format(model_name, database_name), version=exp_num)
+        logger = CSVLogger(save_dir="../metrics/logs/hold-out", name="{}-{}".format(model_name, database_name), version=exp_num)
         
         trainer = L.Trainer(
             max_epochs= num_epochs,
@@ -101,9 +101,9 @@ class PytorchTrainingAndTest:
         results = {k:[v] for k,v in results.items()}
         metrics_df = pd.DataFrame(results)
         
-        metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
+        #metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
 
-        self.save_metrics_to_figure(metrics, model_name, database_name)
+        #self.save_metrics_to_figure(metrics, model_name, database_name)
         
         return metrics_df
     
@@ -142,9 +142,9 @@ class PytorchTrainingAndTest:
           #Define callback to save the best model weights
           print("===== Starting fold {}/{} =====".format(i+1, num_folds))
           #define the function to save the logs
-          logger = CSVLogger(save_dir="../metrics/logs/", name="{}-{}-fold{}".format(model_name, database_name,i), version=exp_num)
-          ckp = ModelCheckpoint(dirpath=f"../metrics/logs/fold{i}", 
-                                filename="{}-{}-fold{}".format(model_name, database_name, i), 
+          logger = CSVLogger(save_dir=f"../metrics/logs/{model_name}_{database_name}/fold{i}", name="{}-{}".format(model_name, database_name), version=exp_num)
+          ckp = ModelCheckpoint(dirpath=f"../metrics/logs/{model_name}_{database_name}/fold{i}", 
+                                filename="{}-{}".format(model_name, database_name), 
                                 save_top_k=1, 
                                 mode="max", 
                                 monitor="val_acc",
