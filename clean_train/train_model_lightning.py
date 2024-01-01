@@ -20,8 +20,8 @@ class TrainModelLigthning(L.LightningModule):
         self.model = model_pretrained
         self.lr = lr
         self.num_class = num_class
-        self.criterion = torch.nn.CrossEntropyLoss() if self.num_class > 2 else torch.nn.BCEWithLogitsLoss()
-        #self.criterion = Loss(loss_type="focal_loss", fl_gamma=5, class_balanced=True, samples_per_class=[327, 514, 1099, 115, 1113, 6705, 142])
+        #self.criterion = torch.nn.CrossEntropyLoss() if self.num_class > 2 else torch.nn.BCEWithLogitsLoss()
+        self.criterion = Loss(loss_type="focal_loss", fl_gamma=2)
         
         self.train_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
         self.val_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
@@ -119,9 +119,9 @@ class TrainModelLigthning(L.LightningModule):
         return loss
         
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.model.parameters(), lr=self.lr, weight_decay=1e-3)
+        #optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         #optimizer = optim.RMSprop(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
-        #optimizer = optim.SGD(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
+        optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=0.9)
         #miletones = [0.5 * 100, 0.75 * 100]
         #scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)
         #scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.3, total_iters=10)
@@ -133,8 +133,9 @@ class CustomTimeCallback(Callback):
     
     def __init__(self, file_train, file_test) -> None:
         super().__init__()
-        if not os.path.exists("../metrics/time"):
-            os.mkdir("../metrics/time")
+        # if not os.path.exists("../metrics/time"):
+        #     os.mkdir("../metrics/time")
+        os.makedirs("../metrics/time", exist_ok=True)
         
         self.file_train = file_train
         self.file_test = file_test

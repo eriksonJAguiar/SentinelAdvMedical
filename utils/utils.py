@@ -13,6 +13,7 @@ import torchvision
 import PIL
 from sklearn.model_selection import train_test_split
 from collections import Counter
+import cv2
 from torch.utils.tensorboard import SummaryWriter
 
 
@@ -41,14 +42,27 @@ def load_attacked_database(path, batch_size, folder_from, image_size=(128,128)):
 
 def load_database(path, batch_size, image_size=(128,128), is_agumentation=False):
         if is_agumentation:
-            tf_image = transforms.Compose([#transforms.ToPILImage(),
+            tf_image_train = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
-                                       transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
+                                       #transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
+                                       #transforms.RandomRotation(degrees=30),
+                                       #transforms.RandomResizedCrop(224, scale=(0.8, 1.2)),
+                                       transforms.RandomHorizontalFlip(),
+                                       transforms.RandomVerticalFlip(),
+                                       #transforms.RandomAffine(degrees=30, translate=(0.1, 0.1), scale=(0.8, 1.2), shear=15),
+                                       transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
                                        transforms.ToTensor(),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                                     ])
+            tf_image_test = transforms.Compose([
+                transforms.Resize(image_size),
+                #transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
+                transforms.ToTensor(),
+                #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
         else:
-            tf_image = transforms.Compose([
+            tf_image_train = tf_image_test = transforms.Compose([
                 transforms.Resize(image_size),
                 #transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
                 transforms.ToTensor(),
@@ -57,15 +71,15 @@ def load_database(path, batch_size, image_size=(128,128), is_agumentation=False)
             ])
         
         ######### Train ###############
-        train_data = datasets.ImageFolder(os.path.join(path, 'train'), transform=tf_image)
+        train_data = datasets.ImageFolder(os.path.join(path, 'Train'), transform=tf_image_train)
 
         ######### test ###############
-        test_data = datasets.ImageFolder(os.path.join(path, 'test'), transform=tf_image)
+        test_data = datasets.ImageFolder(os.path.join(path, 'Test'), transform=tf_image_test)
 
         # ######### Validation ###############
         # val_data = datasets.ImageFolder(os.path.join(path, 'val'), transform=tf_image) 
         
-        num_class = len(os.listdir(os.path.join(path, 'train')))
+        num_class = len(os.listdir(os.path.join(path, 'Train')))
 
         print("Database report: \n")
         train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True, num_workers=4)
@@ -144,11 +158,12 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
                                        #transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
-                                       #transforms.RandomHorizontalFlip(),
-                                       #transforms.RandomVerticalFlip(),
-                                       #transforms.RandomRotation(30),
+                                       #transforms.RandomRotation(degrees=30),
+                                       #transforms.RandomResizedCrop(224, scale=(0.8, 1.2)),
+                                       transforms.RandomHorizontalFlip(),
+                                       transforms.RandomRotation(15),
+                                       #transforms.RandomAffine(degrees=30, translate=(0.1, 0.1), scale=(0.8, 1.2), shear=15),
                                        #transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
-                                       #transforms.RandomResizedCrop(224),
                                        transforms.ToTensor(),
                                        #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -171,6 +186,8 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
         else:
             data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, as_rgb=as_rgb)
             
+            print(Counter(data.data["y"]))
+            
             train, test = train_test_split(list(range(len(data))), test_size=test_size, shuffle=True, random_state=RANDOM_SEED)
             
             # index_num = int(np.floor(0.1*len(test)))
@@ -183,6 +200,8 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             
             train_loader = DataLoader(data, batch_size=batch_size, sampler=train_sampler, num_workers=4)
             test_loader = DataLoader(data, batch_size=batch_size, sampler=test_sampler, num_workers=4)
+            
+            #print(Counter(train_loader.dataset))
 
         return train_loader, test_loader, num_class
 
@@ -410,7 +429,8 @@ class CustomDatasetFromCSV(Dataset):
         x_path = os.path.join(self.root, self.data.iloc[idx, 0])
         y = self.cl_name[self.data.iloc[idx, 1]]
         
-        X = Image.open(x_path).convert("RGB") if self.as_rgb else Image.open(x_path)
+        X = Image.open(x_path).convert("RGB")
+        #X = cv2.cvtColor(cv2.imread(x_path), cv2.COLOR_BGR2RGB) if self.as_rgb else cv2.imread(x_path, cv2.IMREAD_GRAYSCALE)
  
         if self.tf_image:
             X = self.tf_image(X)

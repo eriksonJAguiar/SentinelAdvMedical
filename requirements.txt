@@ -9,6 +9,7 @@ matplotlib
 pillow
 lightning
 matplotlib
+opencv-python
 seaborn
 tensorboard
 balanced-loss
