@@ -16,6 +16,8 @@ import utils
 #device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 #print(f"Device to run: {device}")
 
+RANDOM_SEED = 43
+
 torch.cuda.empty_cache()
 
 parser = argparse.ArgumentParser(description='')
@@ -32,8 +34,8 @@ args = vars(parser.parse_args())
     
 if __name__ == '__main__':
 
-    torch.manual_seed(123)
-    np.random.seed(123)
+    torch.manual_seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
     
     train_with_pytorch = PytorchTrainingAndTest()
     models_load = ModelsPretrained()
@@ -41,7 +43,7 @@ if __name__ == '__main__':
     #Variables to run experiments
     learning_rate = 0.001
     num_epochs = int(args["epochs"])
-    batch_size = 64
+    batch_size = 32
     test_size = None if args["test_size"] is None else float(args["test_size"])
     as_aug = args["as_augmentation"]
     kfold = int(args["kfold"]) if not args["kfold"] is None else None

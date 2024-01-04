@@ -17,7 +17,7 @@ import cv2
 from torch.utils.tensorboard import SummaryWriter
 
 
-RANDOM_SEED = 123
+RANDOM_SEED = 43
 
 torch.manual_seed(RANDOM_SEED)
 np.random.seed(RANDOM_SEED)
@@ -158,12 +158,11 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
                                        #transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
-                                       #transforms.RandomRotation(degrees=30),
-                                       #transforms.RandomResizedCrop(224, scale=(0.8, 1.2)),
                                        transforms.RandomHorizontalFlip(),
-                                       transforms.RandomRotation(15),
-                                       #transforms.RandomAffine(degrees=30, translate=(0.1, 0.1), scale=(0.8, 1.2), shear=15),
-                                       #transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+                                       transforms.RandomVerticalFlip(),
+                                       transforms.RandomAffine(degrees=3, shear=0.01),
+                                       transforms.RandomResizedCrop(size=image_size, scale=(0.875, 1.0)),
+                                       transforms.ColorJitter(brightness=(0.7, 1.5)),
                                        transforms.ToTensor(),
                                        #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
                                        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -186,7 +185,7 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
         else:
             data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, as_rgb=as_rgb)
             
-            print(Counter(data.data["y"]))
+            print({k: cl for k, cl in enumerate(data.cl_name)})
             
             train, test = train_test_split(list(range(len(data))), test_size=test_size, shuffle=True, random_state=RANDOM_SEED)
             

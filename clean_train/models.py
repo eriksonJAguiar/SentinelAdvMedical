@@ -44,16 +44,18 @@ class ModelsPretrained():
         if model_name == "resnet50":
             model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V1)
             
-            self._freeze_layers(model, 10)
+            #self._freeze_layers(model, 5)
+            for param in model.parameters():
+                param.requires_grad = False
             
             model.fc = torch.nn.Sequential(
-                torch.nn.Linear(model.fc.in_features, 128),
-                torch.nn.BatchNorm1d(128),
-                torch.nn.ReLU(),
+                #torch.nn.Linear(model.fc.in_features, 224),
+                #torch.nn.BatchNorm1d(224),
+                #torch.nn.ReLU(),
                 #torch.nn.Dropout(0.5),
                 #torch.nn.Linear(512, 128),
-                torch.nn.Dropout(0.5),
-                torch.nn.Linear(128, out_features_model)
+                #torch.nn.Dropout(0.5),
+                torch.nn.Linear(model.fc.in_features, out_features_model)
             )
             
             #model.apply(self._initialize_weights)

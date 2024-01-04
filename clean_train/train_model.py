@@ -39,7 +39,7 @@ class PytorchTrainingAndTest:
                                          lr=learning_rate)
         
         #define callback for earlystopping
-        early_stop_callback = EarlyStopping(monitor='val_acc', min_delta=0.1, patience=10, verbose=True, mode='max')
+        early_stop_callback = EarlyStopping(monitor='val_acc', min_delta=0.01, patience=8, verbose=True, mode='max')
         
         #define custom callback to calculate the train and test time 
         timer = CustomTimeCallback("../metrics/time/train_time_{}-{}.csv".format(model_name, database_name),
@@ -101,9 +101,9 @@ class PytorchTrainingAndTest:
         results = {k:[v] for k,v in results.items()}
         metrics_df = pd.DataFrame(results)
         
-        #metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
+        metrics = pd.read_csv(f"{trainer.logger.log_dir}/metrics.csv")
 
-        #self.save_metrics_to_figure(metrics, model_name, database_name)
+        self.save_metrics_to_figure(metrics, model_name, database_name)
         
         return metrics_df
     
@@ -203,7 +203,7 @@ class PytorchTrainingAndTest:
         
         return metrics_final
       
-    def save_metrics_to_figure(self, metrics, model_name, database_name, fold=1):
+    def save_metrics_to_figure(self, metrics, model_name, database_name, fold="hold-out"):
         '''
           Generate and save figures of metrics accuracy, loss, and f1-score by models and database
           params:
@@ -222,21 +222,23 @@ class PytorchTrainingAndTest:
         #dataframe of metrics
         df_metrics = pd.DataFrame(aggreg_metrics)
         
-        os.makedirs(os.path.join("../", "metrics", "figures", f"fold{fold}"), exist_ok=True)
+        fold_name = fold if fold == "hold-out" else f"fold{fold}"
+        
+        os.makedirs(os.path.join("../", "metrics", "figures", fold_name), exist_ok=True)
         
         #save figures 
         fig_loss = df_metrics[["loss", "val_loss"]].plot(grid=True, legend=True, xlabel='Epoch', ylabel='Loss').get_figure()
         plt.tight_layout()
-        fig_loss.savefig(os.path.join("../", "metrics", "figures", f"fold{fold}", "{}-{}-{}.png".format('loss_metrics',model_name, database_name)))
+        fig_loss.savefig(os.path.join("../", "metrics", "figures", fold_name, "{}-{}-{}.png".format('loss_metrics',model_name, database_name)))
         
         fig_acc = df_metrics[["acc", "val_acc"]].plot(grid=True, legend=True, xlabel='Epoch', ylabel='Accuracy').get_figure()
         plt.tight_layout()
-        fig_acc.savefig(os.path.join("../", "metrics", "figures", f"fold{fold}", "{}-{}-{}.png".format('acc_metrics',model_name, database_name)))
+        fig_acc.savefig(os.path.join("../", "metrics", "figures", fold_name, "{}-{}-{}.png".format('acc_metrics',model_name, database_name)))
         
         fig_acc = df_metrics[["f1_score", "val_f1_score"]].plot(grid=True, legend=True, xlabel='Epoch', ylabel='F1-Score').get_figure()
         plt.tight_layout()
-        fig_acc.savefig(os.path.join("../", "metrics", "figures", f"fold{fold}", "{}-{}-{}.png".format('f1_metrics',model_name, database_name)))
+        fig_acc.savefig(os.path.join("../", "metrics", "figures", fold_name, "{}-{}-{}.png".format('f1_metrics',model_name, database_name)))
         
         fig_acc = df_metrics[["auc", "val_auc"]].plot(grid=True, legend=True, xlabel='Epoch', ylabel='AUC').get_figure()
         plt.tight_layout()
-        fig_acc.savefig(os.path.join("../", "metrics", "figures", f"fold{fold}", "{}-{}-{}.png".format('auc_metrics',model_name, database_name)))
+        fig_acc.savefig(os.path.join("../", "metrics", "figures", fold_name, "{}-{}-{}.png".format('auc_metrics',model_name, database_name)))

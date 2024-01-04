@@ -7,12 +7,9 @@ import torchvision.models as models
 import lightning as L
 import numpy as np
 from torch.nn import functional as F
-from torchmetrics import Accuracy, Recall, Specificity, Precision, F1Score, AUROC
+from torchmetrics.classification import Accuracy, Recall, Specificity, Precision, F1Score, AUROC
 from lightning.pytorch.callbacks import Callback
 from balanced_loss import Loss
-
-from sklearn.preprocessing import label_binarize
-from sklearn.metrics import roc_auc_score
 
 class TrainModelLigthning(L.LightningModule):
     def __init__(self, model_pretrained, num_class, lr):
@@ -20,21 +17,21 @@ class TrainModelLigthning(L.LightningModule):
         self.model = model_pretrained
         self.lr = lr
         self.num_class = num_class
-        #self.criterion = torch.nn.CrossEntropyLoss() if self.num_class > 2 else torch.nn.BCEWithLogitsLoss()
-        self.criterion = Loss(loss_type="focal_loss", fl_gamma=2)
+        self.criterion = torch.nn.CrossEntropyLoss() if self.num_class > 2 else torch.nn.BCEWithLogitsLoss()
+        #self.criterion = Loss(loss_type="focal_loss", fl_gamma=5)
         
         self.train_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
         self.val_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
-        self.train_recall = Recall(task="binary")  if not num_class > 2 else Recall(task="multiclass", num_classes=num_class, average='macro')
-        self.val_recall =  Recall(task="binary")  if not num_class > 2 else Recall(task="multiclass", num_classes=num_class, average='macro')
-        self.train_specificity = Specificity(task="binary") if not num_class > 2 else Specificity(task="multiclass", num_classes=num_class, average='macro')
-        self.val_specificity = Specificity(task="binary") if not num_class > 2 else Specificity(task="multiclass", num_classes=num_class, average='macro')
-        self.train_precision = Precision(task="binary") if not num_class > 2 else Precision(task="multiclass", num_classes=num_class, average="macro")
-        self.val_precision = Precision(task="binary") if not num_class > 2 else Precision(task="multiclass", num_classes=num_class, average="macro")
-        self.train_f1 = F1Score(task="binary") if not num_class > 2 else F1Score(task="multiclass", num_classes=num_class, average="macro")
-        self.val_f1 = F1Score(task="binary") if not num_class > 2 else F1Score(task="multiclass", num_classes=num_class, average="macro")
-        self.train_auc = AUROC(task="binary") if not num_class> 2 else AUROC(task="multiclass", num_classes=num_class, average="macro")
-        self.val_auc = AUROC(task="binary") if not num_class> 2 else AUROC(task="multiclass", num_classes=num_class, average="macro")
+        self.train_recall = Recall(task="binary")  if not num_class > 2 else Recall(task="multiclass", num_classes=num_class, average='micro')
+        self.val_recall =  Recall(task="binary")  if not num_class > 2 else Recall(task="multiclass", num_classes=num_class, average='micro')
+        self.train_specificity = Specificity(task="binary") if not num_class > 2 else Specificity(task="multiclass", num_classes=num_class, average='micro')
+        self.val_specificity = Specificity(task="binary") if not num_class > 2 else Specificity(task="multiclass", num_classes=num_class, average='micro')
+        self.train_precision = Precision(task="binary") if not num_class > 2 else Precision(task="multiclass", num_classes=num_class, average="micro")
+        self.val_precision = Precision(task="binary") if not num_class > 2 else Precision(task="multiclass", num_classes=num_class, average="micro")
+        self.train_f1 = F1Score(task="binary") if not num_class > 2 else F1Score(task="multiclass", num_classes=num_class, average="micro")
+        self.val_f1 = F1Score(task="binary") if not num_class > 2 else F1Score(task="multiclass", num_classes=num_class, average="micro")
+        self.train_auc = AUROC(task="binary") if not num_class> 2 else AUROC(task="multiclass", num_classes=num_class, average="weighted")
+        self.val_auc = AUROC(task="binary") if not num_class> 2 else AUROC(task="multiclass", num_classes=num_class, average="weighted")
         #self.trian_mcc = MatthewsCorrCoef(task="binary") if not num_class > 2 else MatthewsCorrCoef(task="multiclass", num_classes=num_class)
         #self.val_mcc = MatthewsCorrCoef(task="binary") if not num_class > 2 else MatthewsCorrCoef(task="multiclass", num_classes=num_class)
 
@@ -119,9 +116,9 @@ class TrainModelLigthning(L.LightningModule):
         return loss
         
     def configure_optimizers(self):
-        #optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
+        optimizer = optim.Adam(self.model.parameters(), lr=self.lr)
         #optimizer = optim.RMSprop(self.model.parameters(), lr=self.lr, weight_decay=1e-4)
-        optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=0.9)
+        #optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=0.9)
         #miletones = [0.5 * 100, 0.75 * 100]
         #scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)
         #scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.3, total_iters=10)
