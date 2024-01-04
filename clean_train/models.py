@@ -49,13 +49,13 @@ class ModelsPretrained():
                 param.requires_grad = False
             
             model.fc = torch.nn.Sequential(
-                #torch.nn.Linear(model.fc.in_features, 224),
-                #torch.nn.BatchNorm1d(224),
-                #torch.nn.ReLU(),
+                torch.nn.Linear(model.fc.in_features, 224),
+                torch.nn.BatchNorm1d(224),
+                torch.nn.ReLU(),
                 #torch.nn.Dropout(0.5),
                 #torch.nn.Linear(512, 128),
-                #torch.nn.Dropout(0.5),
-                torch.nn.Linear(model.fc.in_features, out_features_model)
+                torch.nn.Dropout(0.5),
+                torch.nn.Linear(224, out_features_model)
             )
             
             #model.apply(self._initialize_weights)
@@ -93,10 +93,10 @@ class ModelsPretrained():
 
             model = models.densenet.densenet121(weights=models.DenseNet121_Weights.IMAGENET1K_V1)
             
-            # for param in model.parameters():
-            #     param.requires_grad = False
+            for param in model.parameters():
+                param.requires_grad = False
             
-            self._freeze_layers(model, 10)
+            #self._freeze_layers(model, 10)
             
             num_ftrs = model.classifier.in_features
             model.classifier = torch.nn.Sequential(
@@ -115,7 +115,10 @@ class ModelsPretrained():
             model.aux_logits = False
             #model = models.inception_v3(pretrained=True, aux_logits=False)
             
-            self._freeze_layers(model, 10)
+            #self._freeze_layers(model, 10)
+            
+            for param in model.parameters():
+                param.requires_grad = False
 
             num_ftrs = model.fc.in_features
             model.fc = torch.nn.Sequential(
@@ -129,7 +132,10 @@ class ModelsPretrained():
         elif model_name == "vgg16":
             model = models.vgg.vgg16(weights=models.VGG16_Weights.IMAGENET1K_V1)
             
-            self._freeze_layers(model, 10)
+            for param in model.parameters():
+                param.requires_grad = False
+            
+            #self._freeze_layers(model, 10)
             
             num_ftrs = model.classifier[6].in_features
             model.classifier[6] = torch.nn.Sequential(
@@ -146,7 +152,10 @@ class ModelsPretrained():
         elif model_name == "vgg19":
             model = models.vgg.vgg19(weights=models.VGG19_Weights.IMAGENET1K_V1)
             
-            self._freeze_layers(model, 10)
+            for param in model.parameters():
+                param.requires_grad = False
+            
+            #self._freeze_layers(model, 10)
             
             num_ftrs = model.classifier[6].in_features
             model.classifier[6] = torch.nn.Sequential(
@@ -164,7 +173,10 @@ class ModelsPretrained():
         elif model_name == "efficientnet":
             model = models.efficientnet.efficientnet_b0(weights=models.EfficientNet_B0_Weights.IMAGENET1K_V1)
             
-            self._freeze_layers(model, 10)
+            for param in model.parameters():
+                param.requires_grad = False
+            
+            #self._freeze_layers(model, 10)
             
             num_ftrs = model.classifier[1].in_features
             model.classifier[1] = torch.nn.Sequential(

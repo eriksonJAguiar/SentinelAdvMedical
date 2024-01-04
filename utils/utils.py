@@ -109,9 +109,9 @@ def load_database_kf(root_path, batch_size, image_size=(128,128), csv_path=None,
             tf_image = transforms.Compose([#transforms.ToPILImage(),
                                        transforms.Resize(image_size),
                                        #transforms.AutoAugment(transforms.autoaugment.AutoAugmentPolicy.CIFAR10),
-                                    #    transforms.RandomHorizontalFlip(),
-                                    #    transforms.RandomVerticalFlip(),
-                                    #    transforms.RandomRotation(30),
+                                       transforms.RandomHorizontalFlip(),
+                                       transforms.RandomVerticalFlip(),
+                                       transforms.RandomRotation(30),
                                     #    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
                                     #    transforms.RandomResizedCrop(224),
                                        transforms.ToTensor(),
@@ -203,6 +203,36 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             #print(Counter(train_loader.dataset))
 
         return train_loader, test_loader, num_class
+    
+def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,128), percentage_attacked=0.1, test_size=None):
+        tf_image = transforms.Compose([
+                transforms.Resize(image_size),
+                transforms.ToTensor(),
+                #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        
+        if test_size is None:
+            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Val")
+            
+            num_class = len(val.cl_name.values())
+            
+            val_loader = DataLoader(val, batch_size=batch_size, num_workers=4, shuffle=False)
+        else:
+            data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path)
+            
+            train, test = train_test_split(list(range(len(data))), test_size=test_size, random_state=RANDOM_SEED)
+            
+            num_class = len(data.cl_name.values())
+            
+            index_num = int(np.floor(percentage_attacked*len(test)))
+            val_index = test[len(test)-index_num:]
+            
+            sampler_val = Subset(data, val_index)
+            
+            val_loader = DataLoader(sampler_val, batch_size=batch_size, num_workers=4, shuffle=False)
+
+        return val_loader, num_class
 
 def show_images(dataset_loader, db_name, path_to_save):
     """function that show images from dataloader
@@ -324,11 +354,11 @@ def __get_model_structure(model_name, nb_class):
         model = torchvision.models.resnet50()
         num_ftrs = model.fc.in_features
         model.fc = torch.nn.Sequential(
-                torch.nn.Linear(num_ftrs, 128),
-                torch.nn.BatchNorm1d(128),
+                torch.nn.Linear(num_ftrs, 224),
+                torch.nn.BatchNorm1d(224),
                 torch.nn.ReLU(),
                 torch.nn.Dropout(0.5),
-                torch.nn.Linear(128, nb_class)
+                torch.nn.Linear(224, nb_class)
         )
 
     elif model_name == "vgg16":

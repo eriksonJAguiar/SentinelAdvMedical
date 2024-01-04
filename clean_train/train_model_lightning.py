@@ -121,9 +121,9 @@ class TrainModelLigthning(L.LightningModule):
         #optimizer = optim.SGD(self.model.parameters(), lr=self.lr, momentum=0.9)
         #miletones = [0.5 * 100, 0.75 * 100]
         #scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=miletones, gamma=0.1)
-        #scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.3, total_iters=10)
+        scheduler = torch.optim.lr_scheduler.LinearLR(optimizer, start_factor=1.0, end_factor=0.3, total_iters=10)
         
-        return [optimizer]
+        return [optimizer], [scheduler]
 
 
 class CustomTimeCallback(Callback):

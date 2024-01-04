@@ -43,7 +43,7 @@ if __name__ == '__main__':
     #Variables to run experiments
     learning_rate = 0.001
     num_epochs = int(args["epochs"])
-    batch_size = 32
+    batch_size = 64
     test_size = None if args["test_size"] is None else float(args["test_size"])
     as_aug = args["as_augmentation"]
     kfold = int(args["kfold"]) if not args["kfold"] is None else None
