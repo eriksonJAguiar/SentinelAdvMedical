@@ -19,7 +19,7 @@ def odd_detector2(weights_path, model_name, dataset_name, in_images, out_images,
     #4th convert images and labels to dataloader
     dataloader_atttacked = utils.numpy_to_dataloader(images=in_out_images, labels=in_out_labels, batch_size=batch_size)
     
-    model_path = os.path.join(weights_path, "{}-{}-exp0.ckpt".format(model_name, dataset_name))
+    model_path = os.path.join(weights_path, "{}-{}-exp1.ckpt".format(model_name, dataset_name))
     model = utils.read_model_from_checkpoint(model_path=model_path, model_name=model_name, nb_class=nb_class)
     model.eval().cuda()
     

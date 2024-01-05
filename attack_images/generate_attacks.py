@@ -77,11 +77,10 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
         
     #1st read validation dataset to attack the model
     val_attack_dataset, num_class = utils.load_attacked_database_df(root_path=root_path, csv_path=csv_path, batch_size=batch_size, image_size=input_size)
-    print(num_class)
 
     #2nd read models from checkpoints
     model_path = os.path.join(weights_path, "{}-{}-exp1.ckpt".format(model_name, dataset_name))
-    model = utils.read_model_from_checkpoint(model_path=model_path, model_name=model_name, nb_class=7)
+    model = utils.read_model_from_checkpoint(model_path=model_path, model_name=model_name, nb_class=num_class)
             
     #3rd run attack
     time_start = time.time()
@@ -138,6 +137,7 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
     
     #10th save logits to numpy file
     if is_logits_save:
+        os.makedirs(os.path.join(save_metrics_path, "logits"), exist_ok=True)
         if not os.path.exists(os.path.join(save_metrics_path, "logits","clean_logits_{}.npy".format(model_name))):
             with open(os.path.join(save_metrics_path, "logits","clean_logits_{}.npy".format(model_name)), "wb") as f:
                 np.save(f, logits_clean, allow_pickle=True)
@@ -146,6 +146,7 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
             np.save(f, logits_adv, allow_pickle=True)
 
     if is_features_save:
+        os.makedirs(os.path.join(save_metrics_path, "features"), exist_ok=True)
         if not os.path.exists(os.path.join(save_metrics_path, "features","clean_feat_{}.npy".format(model_name))):
             with open(os.path.join(save_metrics_path, "features","clean_feat_{}.npy".format(model_name)), "wb") as f:
                 np.save(f, feat_clean, allow_pickle=True)

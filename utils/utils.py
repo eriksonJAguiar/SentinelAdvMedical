@@ -213,7 +213,7 @@ def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,1
         ])
         
         if test_size is None:
-            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test")
+            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Val")
             
             num_class = len(val.cl_name.values())
             
@@ -267,14 +267,16 @@ def show_images_from_array(images_array, db_name):
     plt.imshow(np.transpose(make_grid(torch.Tensor(images_array[:32]), padding=2, normalize=True), (1, 2, 0)))
     plt.savefig("./attack-images/preview_train_{}.png".format(db_name), bbox_inches='tight', pad_inches=0)
     
-def show_random_adv_image(images_array, db_name, attack_name):
+def show_random_adv_image(images_array, db_name, attack_name, eps, path_to_save):
     
     image_idx = np.random.randint(0, len(images_array))
     
+    os.makedirs(path_to_save, exist_ok=True)
+    
     plt.figure(figsize=(11, 11))
     plt.axis("off")
-    plt.imshow(np.transpose(make_grid(torch.Tensor(images_array[image_idx]), normalize=True), (1, 2, 0)))
-    plt.savefig("./attack_preview_{}_{}.png".format(db_name, attack_name), bbox_inches='tight', pad_inches=0)
+    plt.imshow(np.transpose(make_grid(torch.Tensor(images_array), normalize=True), (1, 2, 0)))
+    plt.savefig(os.path.join(path_to_save,"attack_preview_{}_{}_{}.png".format(db_name, attack_name, eps)), bbox_inches='tight', pad_inches=0)
 
 def save_random_train_images(train_loader, experiment_name, dataset_name, one_channel=False):
         

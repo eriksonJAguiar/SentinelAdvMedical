@@ -1,9 +1,11 @@
 import sys
 sys.path.append('./attack_images')
 sys.path.append("./ood_analysis")
+sys.path.append("../utils")
 
 from ood_analysis import odd_decting
 from attack_images import generate_attacks
+from utils import utils
 import torch
 import numpy as np
 import argparse
@@ -29,8 +31,8 @@ args = vars(parser.parse_args())
 
 if __name__ == '__main__':
 
-    torch.manual_seed(123)
-    np.random.seed(123)
+    torch.manual_seed(43)
+    np.random.seed(43)
     
     #1st define de args
     dataset_name = args["dataset_name"]
@@ -40,11 +42,11 @@ if __name__ == '__main__':
     
     #2nd define parameters
     batch_size = 32
-    lr = 0.0001
-    models = ["resnet50"] #["resnet50", "vgg16", "vgg19", "inceptionv3", "efficientnet", "densenet"]
-    attacks = ["FGSM"] #["FGSM", "PGD", "UAP", "DeepFool", "CW"]
-    epsilons = [0.001] #[0.001, 0.01, 0.05, 0.1, 0.5]
-    ood_strategy = ["MaxSoftmax"] #["MaxSoftmax","ODIN", "MaxLogit", "Energy", "Mahalanobis", "KNN"]
+    lr = 0.001
+    models = ["vgg19", "inceptionv3", "efficientnet", "densenet"] #"resnet50", "vgg16",
+    attacks = ["FGSM", "PGD", "UAP", "DeepFool", "CW"]
+    epsilons = [0.001, 0.01, 0.05, 0.1, 0.5]
+    ood_strategy = ["MaxSoftmax","ODIN", "MaxLogit", "Energy", "Mahalanobis", "KNN"]
     
     for model_name in models:
         print("Starting attack for model {}...".format(model_name))
@@ -67,6 +69,8 @@ if __name__ == '__main__':
                                                                               save_metrics_path="./metrics",
                                                                               is_logits_save=True,
                                                                               is_features_save=True)
+                
+                utils.show_random_adv_image(adv_images[:32], dataset_name, attack_name, eps,path_to_save="./metrics/figures/attacks")
                 
                 for ood in ood_strategy:
                     time_odd = time.time()
