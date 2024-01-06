@@ -18,7 +18,7 @@ class TrainModelLigthning(L.LightningModule):
         self.lr = lr
         self.num_class = num_class
         self.criterion = torch.nn.CrossEntropyLoss() if self.num_class > 2 else torch.nn.BCEWithLogitsLoss()
-        #self.criterion = Loss(loss_type="focal_loss", fl_gamma=5)
+        #self.criterion = Loss(loss_type="focal_loss", fl_gamma=2)
         
         self.train_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
         self.val_accuracy = Accuracy(task="binary") if not num_class > 2 else Accuracy(task="multiclass", num_classes=num_class)
