@@ -19,10 +19,12 @@ def __get_last_layer_features(model, model_name, image):
         "vgg16": "features.24",
         "vgg19": "features.34",
         "efficientnet": "features.7.0.block.0",
-        "densenet": "features.denseblock4.denselayer16.conv2"
+        "densenet": "features.denseblock4.denselayer16.conv2",
+        "inceptionv3": "Mixed_7c.branch_pool.conv"
     }
     
-    #_, eval_nodes = get_graph_node_names(model)
+    # _, eval_nodes = get_graph_node_names(model)
+    # print(eval_nodes)
     model_feat = create_feature_extractor(model, return_nodes=[last_layer[model_name]])
     features_dict = model_feat(image)
     
