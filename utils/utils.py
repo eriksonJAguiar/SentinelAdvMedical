@@ -180,7 +180,9 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             test = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test", as_rgb=as_rgb)
             num_class = len(train.cl_name.values())
             
-            train_loader = DataLoader(train, batch_size=batch_size, num_workers=4, shuffle=True)
+            print(train.cl_name)
+            
+            train_loader = DataLoader(train, batch_size=batch_size, num_workers=4, shuffle=True, drop_last=True)
             test_loader = DataLoader(test, batch_size=batch_size, num_workers=4, shuffle=False)
         else:
             data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, as_rgb=as_rgb)
