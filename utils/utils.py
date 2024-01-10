@@ -354,6 +354,7 @@ def read_model_from_checkpoint(model_path, model_name, nb_class):
 def __get_model_structure(model_name, nb_class):
     model = None
     #"resnet50" "vgg16" "vgg19" "inceptionv3" "densenet" "efficientnet"
+    nb_class = nb_class if nb_class > 2 else 1
     if model_name == "resnet50":
         model = torchvision.models.resnet50()
         num_ftrs = model.fc.in_features

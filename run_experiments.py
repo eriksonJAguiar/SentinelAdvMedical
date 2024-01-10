@@ -41,6 +41,7 @@ if __name__ == '__main__':
     weights_path = args["weights_path"]
     
     #2nd define parameters
+    nb_class = 2
     batch_size = 32
     lr = 0.001
     models = ["resnet50", "vgg16","vgg19","inceptionv3", "efficientnet", "densenet"] # 
@@ -82,7 +83,7 @@ if __name__ == '__main__':
                                                         batch_size=batch_size,
                                                         ood_name=ood,
                                                         eps=eps,
-                                                        nb_class=7)
+                                                        nb_class=nb_class)
                     end_ood = time.time() - time_odd
                     
                     metrics_ood["OOD"] = ood

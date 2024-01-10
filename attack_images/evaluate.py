@@ -60,7 +60,7 @@ def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
             
             #calculate metrics for clean
             y_clean = y_clean if nb_class > 2 else y_clean.view(-1, 1).float()
-            y_pred = torch.argmax(pred_clean, dim=1) if nb_class > 2 else torch.argmax(pred_clean, dim=1).view(-1, 1).float()
+            y_pred = torch.argmax(pred_clean, dim=1) if nb_class > 2 else (pred_clean > 0.5).float()
             y_prob = torch.softmax(pred_clean, dim=1) if nb_class > 2 else torch.sigmoid(pred_clean)
             
             #get features clean
@@ -82,7 +82,7 @@ def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
             
             #calcualte metrics for adv
             y_adv = y_adv if nb_class > 2 else y_adv.view(-1, 1).float()
-            y_pred = torch.argmax(pred_adv, dim=1) if nb_class > 2 else torch.argmax(pred_adv, dim=1).view(-1, 1).float()
+            y_pred = torch.argmax(pred_adv, dim=1) if nb_class > 2 else (pred_adv > 0.5).float()
             y_prob = torch.softmax(pred_adv, dim=1) if nb_class > 2 else torch.sigmoid(pred_adv)
             
             #get features
