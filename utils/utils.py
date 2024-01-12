@@ -215,11 +215,15 @@ def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,1
         ])
         
         if test_size is None:
-            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Val")
+            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test")
+            
+            val_index = np.random.choice(range(len(val)), size=300, replace=False)
+            
+            sampler_val = Subset(val, val_index)
             
             num_class = len(val.cl_name.values())
             
-            val_loader = DataLoader(val, batch_size=batch_size, num_workers=4, shuffle=False)
+            val_loader = DataLoader(sampler_val, batch_size=batch_size, num_workers=4, shuffle=False)
         else:
             data = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path)
             

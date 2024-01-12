@@ -46,7 +46,7 @@ if __name__ == '__main__':
     lr = 0.001
     models = ["resnet50", "vgg16","vgg19","inceptionv3", "efficientnet", "densenet"] # 
     #attacks = ["FGSM", "PGD", "UAP", "DeepFool", "CW"]
-    attacks = ["FGSM", "PGD",  "DeepFool", "CW"]
+    attacks = ["Auto","FGSM", "PGD", "CW"]
     epsilons = [0.001, 0.01, 0.05, 0.1, 0.5]
     ood_strategy = ["MaxSoftmax","ODIN", "MaxLogit", "Energy", "Mahalanobis", "KNN"]
     

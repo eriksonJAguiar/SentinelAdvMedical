@@ -10,7 +10,7 @@ import time
 import evaluate
 
 from art.estimators.classification import PyTorchClassifier
-from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent
+from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent, AutoProjectedGradientDescent
 
 #import foolbox as fb
 #from foolbox.attacks import L2FastGradientAttack, L2CarliniWagnerAttack, L2DeepFoolAttack
@@ -35,7 +35,7 @@ def generate_attack(model, data_loader, input_shape, lr, nb_class, attack_name, 
         loss=loss,
         optimizer=opt,
         #clip_values=[0,1],
-        input_shape=input_shape,
+        input_shape=(3, 224, 224),
         nb_classes=nb_class
     )
     
@@ -60,14 +60,16 @@ def __get_adv_attack(attack_name, data_loader, classifier, eps):
     if attack_name == "FGSM":
         attack = FastGradientMethod(estimator=classifier, eps=eps, batch_size=32)
     elif attack_name == "DeepFool":
-        attack = DeepFool(classifier=classifier, epsilon=eps, batch_size=32, max_iter=5)
+        attack = DeepFool(classifier=classifier, epsilon=eps, batch_size=32, max_iter=10)
     elif attack_name == "CW":
-         attack = CarliniL2Method(classifier=classifier, max_iter=5, batch_size=32)
+         attack = CarliniL2Method(classifier=classifier, batch_size=32, max_iter=10)
         #true_labels = __get_one_hot(true_labels, nb_class)
     elif attack_name == "PGD":
         attack = ProjectedGradientDescent(estimator=classifier, eps=eps, batch_size=32)    
     elif attack_name == "UAP":
-        attack = UniversalPerturbation(classifier=classifier, attacker="pgd", eps=eps, max_iter=5, batch_size=32)
+        attack = UniversalPerturbation(classifier=classifier, attacker="pgd", eps=eps, max_iter=10, batch_size=32)
+    elif attack_name == "Auto":
+        attack = AutoProjectedGradientDescent(estimator=classifier, eps=eps, batch_size=32, max_iter=10)
     
     adv_attack = attack.generate(x=images)
     
