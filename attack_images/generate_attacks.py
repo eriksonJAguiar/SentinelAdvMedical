@@ -35,7 +35,7 @@ def generate_attack(model, data_loader, input_shape, lr, nb_class, attack_name, 
         loss=loss,
         optimizer=opt,
         #clip_values=[0,1],
-        input_shape=(3, 224, 224),
+        input_shape=input_shape,
         nb_classes=nb_class
     )
     

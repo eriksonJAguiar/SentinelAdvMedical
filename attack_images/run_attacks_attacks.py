@@ -60,16 +60,17 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, atta
     size = len(metrics_epochs["epochs"])
                 
     #8th define metrics
-    metrics_avg = pd.DataFrame([{"model": model_name, "attack": attack_name, "eps": eps, "val_acc": metrics_epochs["val_acc"].mean(), "val_acc_adv": metrics_epochs["val_acc_adv"].mean()}])
-    metrics_time = pd.DataFrame([{"attack": attack_name, "examples": len(images),"time": final_time}])
+    metrics_avg = pd.DataFrame([{"dataset": dataset_name, "model": model_name, "attack": attack_name, "eps": eps, "val_acc": metrics_epochs["val_acc"].mean(), "val_acc_adv": metrics_epochs["val_acc_adv"].mean()}])
+    metrics_time = pd.DataFrame([{"dataset": dataset_name, "attack": attack_name, "examples": len(images),"time": final_time}])
+    metrics_epochs["database"] = np.repeat(dataset_name, size)
     metrics_epochs["model"] = np.repeat(model_name, size)
     metrics_epochs["attack"] = np.repeat(attack_name, size)
     metrics_epochs["eps"] = np.repeat(eps, size)
                 
     #9th save metrics to CSV
-    metrics_avg.to_csv("../metrics/attacks_avg2.csv", index=False, mode="a", header=False if os.path.exists("../metrics/attacks_avg2.csv") else True)
-    metrics_epochs.to_csv("../metrics/attacks_epochs2.csv", index=False, mode="a", header=False if os.path.exists("../metrics/attacks_epochs2.csv") else True)
-    metrics_time.to_csv("../metrics/time_attack2.csv", index=False, mode="a", header=False if os.path.exists("../metrics/time_attack2.csv") else True)
+    metrics_avg.to_csv("../metrics/attacks_avg.csv", index=False, mode="a", header=False if os.path.exists("../metrics/attacks_avg.csv") else True)
+    metrics_epochs.to_csv("../metrics/attacks_epochs.csv", index=False, mode="a", header=False if os.path.exists("../metrics/attacks_epochs.csv") else True)
+    metrics_time.to_csv("../metrics/time_attack.csv", index=False, mode="a", header=False if os.path.exists("../metrics/time_attack.csv") else True)
     
     
     
