@@ -215,9 +215,9 @@ def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,1
         ])
         
         if test_size is None:
-            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test")
+            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Val")
             
-            val_index = np.random.choice(range(len(val)), size=300, replace=False)
+            val_index = np.random.choice(range(len(val)), size=100, replace=False)
             
             sampler_val = Subset(val, val_index)
             

@@ -41,14 +41,13 @@ if __name__ == '__main__':
     weights_path = args["weights_path"]
     
     #2nd define parameters
-    nb_class = 2
+    nb_class = 7
     batch_size = 32
     lr = 0.001
-    models = ["resnet50", "vgg16","vgg19","inceptionv3", "efficientnet", "densenet"] # 
-    #attacks = ["FGSM", "BIM","PGD", "UAP", "DeepFool", "CW"]
-    attacks = ["Auto","FGSM", "PGD", "CW"]
+    models = ["resnet50", "vgg16","vgg19","inceptionv3", "efficientnet", "densenet"]
+    attacks = ["FGSM", "BIM", "PGD", "DeepFool", "UAP", "CW"] 
     epsilons = [0.001, 0.01, 0.05, 0.1, 0.5]
-    ood_strategy = ["MaxSoftmax","ODIN", "MaxLogit", "Energy", "Mahalanobis", "KNN"]
+    ood_strategy = ["MaxSoftmax","ODIN", "MaxLogit", "Entropy", "Mahalanobis", "MCD"]
     
     for model_name in models:
         print("Starting attack for model {}...".format(model_name))

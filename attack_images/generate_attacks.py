@@ -11,6 +11,7 @@ import evaluate
 
 from art.estimators.classification import PyTorchClassifier
 from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent, AutoProjectedGradientDescent, BasicIterativeMethod
+from balanced_loss import Loss
 
 #import foolbox as fb
 #from foolbox.attacks import L2FastGradientAttack, L2CarliniWagnerAttack, L2DeepFoolAttack
@@ -26,7 +27,8 @@ def generate_attack(model, data_loader, input_shape, lr, nb_class, attack_name, 
     # model.eval()
     
     #2nd define the loss and optimizer
-    loss = torch.nn.CrossEntropyLoss() if nb_class > 2 else torch.nn.BCEWithLogitsLoss()
+    #loss = torch.nn.CrossEntropyLoss() if nb_class > 2 else torch.nn.BCEWithLogitsLoss()
+    loss = Loss(loss_type="focal_loss", fl_gamma=5)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     
     #3rd create ART classifier
@@ -70,8 +72,6 @@ def __get_adv_attack(attack_name, data_loader, classifier, eps):
         attack = ProjectedGradientDescent(estimator=classifier, eps=eps, batch_size=32)    
     elif attack_name == "UAP":
         attack = UniversalPerturbation(classifier=classifier, attacker="pgd", eps=eps, max_iter=10, batch_size=32)
-    elif attack_name == "Auto":
-        attack = AutoProjectedGradientDescent(estimator=classifier, eps=eps, batch_size=32, max_iter=10)
     
     adv_attack = attack.generate(x=images)
     

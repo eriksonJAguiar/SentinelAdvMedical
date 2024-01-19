@@ -4,7 +4,7 @@ sys.path.append("../utils")
 
 from attack_images import generate_attacks
 from utils import utils
-from pytorch_ood.detector import MaxSoftmax, ODIN, MaxLogit, Mahalanobis, EnergyBased, KNN, ViM, Entropy
+from pytorch_ood.detector import MaxSoftmax, ODIN, MaxLogit, Mahalanobis, EnergyBased, KNN, ViM, Entropy, MCD
 from pytorch_ood.utils import OODMetrics
 import numpy as np
 import os
@@ -93,8 +93,9 @@ def __get_ood_strategy(ood_name, dataloader, model, t=1.0, eps=0.01):
         "ODIN": ODIN(model=model, eps=eps, temperature=t),
         "MaxLogit": MaxLogit(model=model),
         "Mahalanobis": Mahalanobis(model=model, eps=eps),
-        "Energy": EnergyBased(model=model, t=t),
+        "Entropy": Entropy(model=model),
         "KNN": KNN(model=model),
+        "MCD": MCD(model=model)
     
     }
     
