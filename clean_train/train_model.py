@@ -19,7 +19,7 @@ print("Device: {}".format(device))
 #Class for training and test 
 class PytorchTrainingAndTest:
     
-    def run_model(self, exp_num, model, model_name, database_name, train, test, learning_rate, num_epochs, num_class=2):
+    def run_model(self, exp_num, model, model_name, database_name, train, test, learning_rate, num_epochs, num_class=2, is_per_class=False):
         '''
           function to train the model using pytorch lightning
           params:
@@ -36,7 +36,8 @@ class PytorchTrainingAndTest:
         #init model using a pytorch lightining call
         ligh_model = TrainModelLigthning(model_pretrained=model, 
                                          num_class=num_class, 
-                                         lr=learning_rate)
+                                         lr=learning_rate,
+                                         is_per_class=is_per_class)
         
         #define callback for earlystopping
         early_stop_callback = EarlyStopping(monitor='val_acc', min_delta=0.01, patience=8, verbose=True, mode='max')
@@ -80,24 +81,46 @@ class PytorchTrainingAndTest:
         metrics = trainer.logged_metrics
         print(metrics)
             
-        results =  {
-                "exp_num": exp_num,
-                "model_name" : model_name,
-                "train_acc" : metrics["acc"].item(),
-                "train_f1-score": metrics["f1_score"].item(),
-                "train_loss":  metrics["loss"].item(),
-                "train_precision":  metrics["precision"].item(),
-                "train_recall" :  metrics["recall"].item(),
-                "train_auc":  metrics["auc"].item(),
-                "train_spc":  metrics["specificity"].item(),
-                "val_acc" :  metrics["val_acc"].item(),
-                "val_f1-score":  metrics["val_f1_score"].item(),
-                "val_loss":  metrics["val_loss"].item(),
-                "val_precision":  metrics["val_precision"].item(),
-                "val_recall" :  metrics["val_recall"].item(),
-                "val_auc":  metrics["val_auc"].item(),
-                "val_spc":  metrics["val_specificity"].item(),
-        }
+        if is_per_class:
+            results =  {
+                    "exp_num": exp_num,
+                    "model_name" : model_name,
+                    "train_loss":  metrics["loss"].item(),
+                    "val_loss":  metrics["val_loss"].item(),
+                }
+            
+            for i in range(num_class):
+                results[f"train_acc_{i}"] =  metrics[f"acc_{i}"].item()
+                results[f"train_precision_{i}"] =  metrics[f"precision_{i}"].item()
+                results[f"train_recall_{i}"] =  metrics[f"recall_{i}"].item()
+                results[f"train_spc_{i}"] =  metrics[f"specificity_{i}"].item()
+                results[f"rain_f1-score_{i}"] =  metrics[f"f1_score_{i}"].item()
+                
+                results[f"val_acc_{i}"] =  metrics[f"val_acc_{i}"].item()
+                results[f"val_precision_{i}"] =  metrics[f"val_precision_{i}"].item()
+                results[f"val_recall_{i}"] =  metrics[f"val_recall_{i}"].item()
+                results[f"val_spc_{i}"] =  metrics[f"val_specificity_{i}"].item()
+                results[f"val_f1-score_{i}"] =  metrics[f"val_f1_score_{i}"].item()
+        
+        else:
+            results =  {
+                    "exp_num": exp_num,
+                    "model_name" : model_name,
+                    "train_acc" : metrics["acc"].item(),
+                    "train_f1-score": metrics["f1_score"].item(),
+                    "train_loss":  metrics["loss"].item(),
+                    "train_precision":  metrics["precision"].item(),
+                    "train_recall" :  metrics["recall"].item(),
+                    "train_auc":  metrics["auc"].item(),
+                    "train_spc":  metrics["specificity"].item(),
+                    "val_acc" :  metrics["val_acc"].item(),
+                    "val_f1-score":  metrics["val_f1_score"].item(),
+                    "val_loss":  metrics["val_loss"].item(),
+                    "val_precision":  metrics["val_precision"].item(),
+                    "val_recall" :  metrics["val_recall"].item(),
+                    "val_auc":  metrics["val_auc"].item(),
+                    "val_spc":  metrics["val_specificity"].item(),
+            }
         results = {k:[v] for k,v in results.items()}
         metrics_df = pd.DataFrame(results)
         

@@ -27,6 +27,7 @@ parser.add_argument('-r', '--as_rgb', action="store_true", required=False)
 parser.add_argument('-kf', '--kfold', help="number of folds",required=False)
 parser.add_argument('-au', '--as_augmentation', action="store_true", required=False)
 parser.add_argument("-t", "--test_size", required=False)
+parser.add_argument("-pc", "--as_per_class", action="store_true", required=False)
 parser.add_argument("-mn", "--model_name")
 parser.add_argument("-ep", "--epochs")
 parser.add_argument('-dm','--dataset_name', help='databaset name')
@@ -49,6 +50,7 @@ if __name__ == '__main__':
     kfold = int(args["kfold"]) if not args["kfold"] is None else None
     model_name = args["model_name"]
     as_rgb = args["as_rgb"]
+    is_per_class = args["as_per_class"]
     #image_size = (224, 224)
     image_size = (299, 299) if model_name == "inceptionv3" else (224, 224)
 
@@ -112,7 +114,8 @@ if __name__ == '__main__':
                                               test=test, 
                                               learning_rate=learning_rate, 
                                               num_epochs=num_epochs, 
-                                              num_class=num_class)
+                                              num_class=num_class,
+                                              is_per_class=is_per_class)
                     
     #results_metrics = pd.concat([results_metrics, results])
     #results_metrics["fold"] = exp_num

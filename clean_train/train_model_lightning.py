@@ -13,11 +13,12 @@ from lightning.pytorch.callbacks import Callback
 from balanced_loss import Loss
 
 class TrainModelLigthning(L.LightningModule):
-    def __init__(self, model_pretrained, num_class, lr):
+    def __init__(self, model_pretrained, num_class, lr, is_per_class=False):
         super().__init__()
         self.model = model_pretrained
         self.lr = lr
         self.num_class = num_class
+        self.is_per_class = is_per_class
         #self.criterion = torch.nn.CrossEntropyLoss() if self.num_class > 2 else torch.nn.BCEWithLogitsLoss()
         self.criterion = Loss(loss_type="focal_loss", fl_gamma=5)
         #self.criterion = Loss(loss_type="binary_cross_entropy")
@@ -67,36 +68,43 @@ class TrainModelLigthning(L.LightningModule):
         self.model.eval()
         with torch.no_grad():
              _, y_true, y_pred, probs = self._shared_step(batch) if self.num_class > 2 else self._shared_step_binary(batch)
-        
-        self.train_accuracy.update(y_pred, y_true)
-        self.train_precision.update(y_pred, y_true)
-        self.train_recall.update(y_pred, y_true)
-        self.train_specificity.update(y_pred, y_true)
-        self.train_f1.update(y_pred, y_true)
-        self.train_auc.update(probs, y_true)
-        
-        # acc_per_class = torchmetrics.functional.accuracy(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
-        # pre_per_class = torchmetrics.functional.precision(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
-        # recall_per_class = torchmetrics.functional.recall(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
-        # spc_per_class = torchmetrics.functional.specificity(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
-        # f1_per_class = torchmetrics.functional.f1_score(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
-        # auc_per_class = torchmetrics.functional.auroc(probs, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            
         
         self.log('loss', loss, prog_bar=True)
-        self.log('acc', self.train_accuracy.compute(), prog_bar=True, on_epoch=True, on_step=False)
-        self.log('precision', self.train_precision.compute(), prog_bar=True, on_epoch=True, on_step=False)
-        self.log('recall', self.train_recall.compute(), prog_bar=True, on_epoch=True, on_step=False)
-        self.log('f1_score', self.train_f1.compute(), prog_bar=True, on_epoch=True, on_step=False)
-        self.log('specificity', self.train_specificity.compute(), prog_bar=True, on_epoch=True, on_step=False)
-        self.log('auc', self.train_auc.compute(), prog_bar=True, on_epoch=True, on_step=False)
         
-        # for i, (acc, pre, re, spc, f1, auc) in enumerate(zip(acc_per_class, pre_per_class, recall_per_class, spc_per_class, f1_per_class, auc_per_class)):
-        #     self.log(f'acc_{i}', acc, prog_bar=True, on_epoch=True, on_step=False)
-        #     self.log(f'precision_{i}', pre, prog_bar=True, on_epoch=True, on_step=False)
-        #     self.log(f'recall_{i}', re, prog_bar=True, on_epoch=True, on_step=False)
-        #     self.log(f'f1_score_{i}', f1, prog_bar=True, on_epoch=True, on_step=False)
-        #     self.log(f'specificity_{i}', spc, prog_bar=True, on_epoch=True, on_step=False)
-        #     self.log(f'auc_{i}', auc, prog_bar=True, on_epoch=True, on_step=False)
+        self.train_accuracy.update(y_pred, y_true)
+        self.log('acc', self.train_accuracy.compute(), prog_bar=True, on_epoch=True, on_step=False)
+    
+        
+        if self.is_per_class:
+            acc_per_class = torchmetrics.functional.accuracy(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            pre_per_class = torchmetrics.functional.precision(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            recall_per_class = torchmetrics.functional.recall(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            spc_per_class = torchmetrics.functional.specificity(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            f1_per_class = torchmetrics.functional.f1_score(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            auc_per_class = torchmetrics.functional.auroc(probs, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            
+            for i, (acc, pre, re, spc, f1, auc) in enumerate(zip(acc_per_class, pre_per_class, recall_per_class, spc_per_class, f1_per_class, auc_per_class)):
+                self.log(f'acc_{i}', acc, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'precision_{i}', pre, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'recall_{i}', re, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'f1_score_{i}', f1, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'specificity_{i}', spc, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'auc_{i}', auc, prog_bar=True, on_epoch=True, on_step=False)
+        
+        else:
+            self.train_precision.update(y_pred, y_true)
+            self.train_recall.update(y_pred, y_true)
+            self.train_specificity.update(y_pred, y_true)
+            self.train_f1.update(y_pred, y_true)
+            self.train_auc.update(probs, y_true)
+            
+            self.log('precision', self.train_precision.compute(), prog_bar=True, on_epoch=True, on_step=False)
+            self.log('recall', self.train_recall.compute(), prog_bar=True, on_epoch=True, on_step=False)
+            self.log('f1_score', self.train_f1.compute(), prog_bar=True, on_epoch=True, on_step=False)
+            self.log('specificity', self.train_specificity.compute(), prog_bar=True, on_epoch=True, on_step=False)
+            self.log('auc', self.train_auc.compute(), prog_bar=True, on_epoch=True, on_step=False)
+        
         
         self.model.train()
         
@@ -106,40 +114,77 @@ class TrainModelLigthning(L.LightningModule):
         
         loss, y_true, y_pred, probs = self._shared_step(batch) if self.num_class > 2 else self._shared_step_binary(batch)
 
-        self.val_accuracy(y_pred, y_true)
-        self.val_precision(y_pred, y_true)
-        self.val_recall(y_pred, y_true)
-        self.val_specificity(y_pred, y_true)
-        self.val_f1(y_pred, y_true)
-        self.val_auc(probs, y_true)
-        self.val_cm(y_pred, y_true)
-        
         self.log('val_loss', loss)
+        
+        self.val_accuracy(y_pred, y_true)
         self.log('val_acc', self.val_accuracy, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('val_precision', self.val_precision, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('val_recall', self.val_recall, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('val_f1_score', self.val_f1, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('val_specificity', self.val_specificity, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('val_auc', self.val_auc, on_epoch=True, on_step=False, prog_bar=True)
+        
+        if self.is_per_class:
+            acc_per_class = torchmetrics.functional.accuracy(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            pre_per_class = torchmetrics.functional.precision(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            recall_per_class = torchmetrics.functional.recall(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            spc_per_class = torchmetrics.functional.specificity(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            f1_per_class = torchmetrics.functional.f1_score(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            auc_per_class = torchmetrics.functional.auroc(probs, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            
+            for i, (acc, pre, re, spc, f1, auc) in enumerate(zip(acc_per_class, pre_per_class, recall_per_class, spc_per_class, f1_per_class, auc_per_class)):
+                self.log(f'acc_{i}', acc, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'precision_{i}', pre, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'recall_{i}', re, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'f1_score_{i}', f1, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'specificity_{i}', spc, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'auc_{i}', auc, prog_bar=True, on_epoch=True, on_step=False)
+        
+        
+        else:
+            self.val_precision(y_pred, y_true)
+            self.val_recall(y_pred, y_true)
+            self.val_specificity(y_pred, y_true)
+            self.val_f1(y_pred, y_true)
+            self.val_auc(probs, y_true)
+            
+            
+            self.log('val_precision', self.val_precision, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('val_recall', self.val_recall, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('val_f1_score', self.val_f1, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('val_specificity', self.val_specificity, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('val_auc', self.val_auc, on_epoch=True, on_step=False, prog_bar=True)
         
         return loss
     
     def test_step(self, batch, batch_id):
         loss, y_true, y_pred, probs = self._shared_step(batch) if self.num_class > 2 else self._shared_step_binary(batch)
         
-        self.val_accuracy(y_pred, y_true)
-        self.val_precision(y_pred, y_true)
-        self.val_recall(y_pred, y_true)
-        self.val_specificity(y_pred, y_true)
-        self.val_f1(y_pred, y_true)
-        self.val_auc(probs, y_true)
+        if self.is_per_class:
+            acc_per_class = torchmetrics.functional.accuracy(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            pre_per_class = torchmetrics.functional.precision(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            recall_per_class = torchmetrics.functional.recall(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            spc_per_class = torchmetrics.functional.specificity(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            f1_per_class = torchmetrics.functional.f1_score(y_pred, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            auc_per_class = torchmetrics.functional.auroc(probs, y_true, task="multiclass", num_classes=self.num_class, average="none").cpu().numpy()
+            
+            for i, (acc, pre, re, spc, f1, auc) in enumerate(zip(acc_per_class, pre_per_class, recall_per_class, spc_per_class, f1_per_class, auc_per_class)):
+                self.log(f'acc_{i}', acc, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'precision_{i}', pre, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'recall_{i}', re, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'f1_score_{i}', f1, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'specificity_{i}', spc, prog_bar=True, on_epoch=True, on_step=False)
+                self.log(f'auc_{i}', auc, prog_bar=True, on_epoch=True, on_step=False)
         
-        self.log('test_acc', self.val_accuracy, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test_precision', self.val_precision, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test_recall', self.val_recall, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test_f1_score', self.val_f1, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test_specificity', self.val_specificity, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test_auc', self.val_auc, on_epoch=True, on_step=False, prog_bar=True)
+        else:
+            self.val_accuracy(y_pred, y_true)
+            self.val_precision(y_pred, y_true)
+            self.val_recall(y_pred, y_true)
+            self.val_specificity(y_pred, y_true)
+            self.val_f1(y_pred, y_true)
+            self.val_auc(probs, y_true)
+            
+            self.log('test_acc', self.val_accuracy, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('test_precision', self.val_precision, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('test_recall', self.val_recall, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('test_f1_score', self.val_f1, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('test_specificity', self.val_specificity, on_epoch=True, on_step=False, prog_bar=True)
+            self.log('test_auc', self.val_auc, on_epoch=True, on_step=False, prog_bar=True)
         
         
         return loss

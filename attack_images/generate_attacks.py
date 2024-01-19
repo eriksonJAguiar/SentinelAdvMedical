@@ -10,7 +10,7 @@ import time
 import evaluate
 
 from art.estimators.classification import PyTorchClassifier
-from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent, AutoProjectedGradientDescent
+from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent, AutoProjectedGradientDescent, BasicIterativeMethod
 
 #import foolbox as fb
 #from foolbox.attacks import L2FastGradientAttack, L2CarliniWagnerAttack, L2DeepFoolAttack
@@ -59,6 +59,8 @@ def __get_adv_attack(attack_name, data_loader, classifier, eps):
     #FGSM, DeepFool, C&W, UAP
     if attack_name == "FGSM":
         attack = FastGradientMethod(estimator=classifier, eps=eps, batch_size=32)
+    elif attack_name == "BIM":
+        attack = BasicIterativeMethod(estimator=classifier, eps=eps, batch_size=32)
     elif attack_name == "DeepFool":
         attack = DeepFool(classifier=classifier, epsilon=eps, batch_size=32, max_iter=10)
     elif attack_name == "CW":
