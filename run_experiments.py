@@ -89,6 +89,7 @@ if __name__ == '__main__':
                     metrics_ood["OOD"] = ood
                     metrics_ood["model"] = model_name
                     metrics_ood["attack"] = attack_name
+                    metrics_ood["dataset"] = dataset_name
                     metrics_ood["eps"] = eps
                     metrics_ood["time"] = end_ood
                     metrics_ood = {k:[v] for k,v in metrics_ood.items()}

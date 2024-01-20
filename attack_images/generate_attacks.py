@@ -111,7 +111,8 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
     size = len(metrics_epochs["epochs"])
                 
     #6th define metrics
-    metrics_avg = pd.DataFrame([{"model": model_name, 
+    metrics_avg = pd.DataFrame([{"model": model_name,
+                                 "dataset": dataset_name, 
                                  "attack": attack_name, 
                                  "eps": eps, 
                                  "val_acc": metrics_epochs["val_acc"].mean(), 
@@ -120,12 +121,14 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
                                  "val_auc_adv": metrics_epochs["val_auc_adv"].mean(), 
                                  "asr": metrics_epochs["asr"].mean()}])
     
-    metrics_time = pd.DataFrame([{"attack": attack_name, 
+    metrics_time = pd.DataFrame([{"attack": attack_name,
+                                  "dataset": dataset_name, 
                                   "examples": len(images),
                                   "time": final_time}])
     #7th save metrics to dataframe
     metrics_epochs["model"] = np.repeat(model_name, size)
     metrics_epochs["attack"] = np.repeat(attack_name, size)
+    metrics_epochs["dataset"] = np.repeat(dataset_name, size)
     metrics_epochs["eps"] = np.repeat(eps, size)
                 
     #8th define path to save metrics
@@ -140,21 +143,21 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
     
     #10th save logits to numpy file
     if is_logits_save:
-        os.makedirs(os.path.join(save_metrics_path, "logits"), exist_ok=True)
-        if not os.path.exists(os.path.join(save_metrics_path, "logits","clean_logits_{}.npy".format(model_name))):
-            with open(os.path.join(save_metrics_path, "logits","clean_logits_{}.npy".format(model_name)), "wb") as f:
+        os.makedirs(os.path.join(save_metrics_path, f"logits_{dataset_name}"), exist_ok=True)
+        if not os.path.exists(os.path.join(save_metrics_path, f"logits_{dataset_name}","clean_logits_{}.npy".format(model_name))):
+            with open(os.path.join(save_metrics_path, f"logits_{dataset_name}","clean_logits_{}.npy".format(model_name)), "wb") as f:
                 np.save(f, logits_clean, allow_pickle=True)
         
-        with open(os.path.join(save_metrics_path, "logits","adv_logits_{}_{}_{}.npy".format(model_name, attack_name, str(eps))), "wb") as f:
+        with open(os.path.join(save_metrics_path, f"logits_{dataset_name}","adv_logits_{}_{}_{}.npy".format(model_name, attack_name, str(eps))), "wb") as f:
             np.save(f, logits_adv, allow_pickle=True)
 
     if is_features_save:
-        os.makedirs(os.path.join(save_metrics_path, "features"), exist_ok=True)
-        if not os.path.exists(os.path.join(save_metrics_path, "features","clean_feat_{}.npy".format(model_name))):
-            with open(os.path.join(save_metrics_path, "features","clean_feat_{}.npy".format(model_name)), "wb") as f:
+        os.makedirs(os.path.join(save_metrics_path, f"features_{dataset_name}"), exist_ok=True)
+        if not os.path.exists(os.path.join(save_metrics_path, f"features_{dataset_name}","clean_feat_{}.npy".format(model_name))):
+            with open(os.path.join(save_metrics_path, f"features_{dataset_name}","clean_feat_{}.npy".format(model_name)), "wb") as f:
                 np.save(f, feat_clean, allow_pickle=True)
         
-        with open(os.path.join(save_metrics_path, "features", "adv_feat_{}_{}_{}.npy".format(model_name, attack_name, str(eps))), "wb") as f:
+        with open(os.path.join(save_metrics_path, f"features_{dataset_name}", "adv_feat_{}_{}_{}.npy".format(model_name, attack_name, str(eps))), "wb") as f:
             np.save(f, feat_adv, allow_pickle=True)
             
     return images, adv_images, true_labels
