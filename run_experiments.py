@@ -22,6 +22,7 @@ parser.add_argument('-dv','--dataset_csv', help='databaset csv file', required=F
 
 # parser.add_argument('-mn', '--model_name', help="model to training name: resnet50 or resnet18", required=True)
 parser.add_argument('-wp', '--weights_path', help="root of model weigths path", required=True)
+parser.add_argument('-nc', '--nb_class', help="number of class", required=True)
 
 # parser.add_argument('-an', '--attack_name', help="Attack name FGSM, PGD, CW or UAP", required=True)
 # parser.add_argument('-e', '--eps', help="Attack noise", required=True)
@@ -41,7 +42,7 @@ if __name__ == '__main__':
     weights_path = args["weights_path"]
     
     #2nd define parameters
-    nb_class = 7
+    nb_class = int(args["nb_class"])
     batch_size = 32
     lr = 0.001
     models = ["resnet50", "vgg16","vgg19","inceptionv3", "efficientnet", "densenet"]

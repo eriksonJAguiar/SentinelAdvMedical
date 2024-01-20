@@ -27,8 +27,8 @@ def generate_attack(model, data_loader, input_shape, lr, nb_class, attack_name, 
     # model.eval()
     
     #2nd define the loss and optimizer
-    #loss = torch.nn.CrossEntropyLoss() if nb_class > 2 else torch.nn.BCEWithLogitsLoss()
-    loss = Loss(loss_type="focal_loss", fl_gamma=5)
+    loss = torch.nn.CrossEntropyLoss() if nb_class > 2 else torch.nn.BCEWithLogitsLoss()
+    #loss = Loss(loss_type="focal_loss", fl_gamma=5)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     
     #3rd create ART classifier

@@ -215,7 +215,7 @@ def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,1
         ])
         
         if test_size is None:
-            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Val")
+            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test")
             
             val_index = np.random.choice(range(len(val)), size=100, replace=False)
             
