@@ -205,7 +205,28 @@ def load_database_df(root_path, csv_path, batch_size, image_size=(128,128), is_a
             #print(Counter(train_loader.dataset))
 
         return train_loader, test_loader, num_class
-    
+
+def get_random_images(root_path, csv_path, batch_size, image_size, n_samples=100, set="Test"):
+        tf_image = transforms.Compose([
+                transforms.Resize(image_size),
+                transforms.ToTensor(),
+                #transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+        
+        val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task=set)
+            
+        val_index = np.random.choice(range(len(val)), size=n_samples, replace=False)
+            
+        sampler_val = Subset(val, val_index)
+            
+        num_class = len(val.cl_name.values())
+            
+        random_loader = DataLoader(sampler_val, batch_size=batch_size, num_workers=4, shuffle=False)
+        
+        return random_loader
+
+  
 def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,128), percentage_attacked=0.1, test_size=None):
         tf_image = transforms.Compose([
                 transforms.Resize(image_size),
@@ -215,7 +236,7 @@ def load_attacked_database_df(root_path, csv_path, batch_size, image_size=(128,1
         ])
         
         if test_size is None:
-            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Test")
+            val = CustomDatasetFromCSV(root_path, tf_image=tf_image, csv_name=csv_path, task="Val")
             
             val_index = np.random.choice(range(len(val)), size=100, replace=False)
             

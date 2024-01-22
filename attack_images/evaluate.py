@@ -6,7 +6,7 @@ from torchmetrics import Accuracy, Recall, Specificity, Precision, F1Score, AURO
 from torchvision.models.feature_extraction import get_graph_node_names
 from torchvision.models.feature_extraction import create_feature_extractor
 
-def __get_last_layer_features(model, model_name, image):
+def get_last_layer_features(model, model_name, image):
     
     # feature_extractor = torch.nn.Sequential(*list(model.children())[:-1])
     
@@ -64,7 +64,7 @@ def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
             y_prob = torch.softmax(pred_clean, dim=1) if nb_class > 2 else torch.sigmoid(pred_clean)
             
             #get features clean
-            feat_clean.append(__get_last_layer_features(model, model_name, x_clean))
+            feat_clean.append(get_last_layer_features(model, model_name, x_clean))
             
             #calcualte metrics for clean
             accuracy_clean = np.sum(y_pred.cpu().numpy() == y_clean.cpu().numpy()) / len(y_clean)
@@ -86,7 +86,7 @@ def evaluate_model(model, model_name, dataset_clean, dataset_adv, nb_class):
             y_prob = torch.softmax(pred_adv, dim=1) if nb_class > 2 else torch.sigmoid(pred_adv)
             
             #get features
-            feat_adv.append(__get_last_layer_features(model, model_name, x_adv))
+            feat_adv.append(get_last_layer_features(model, model_name, x_adv))
 
             #calculate metrics for adv
             accuracy_adv = np.sum(y_pred.cpu().numpy() == y_adv.cpu().numpy()) / len(y_adv)

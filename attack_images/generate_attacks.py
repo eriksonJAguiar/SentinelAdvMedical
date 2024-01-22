@@ -10,8 +10,7 @@ import time
 import evaluate
 
 from art.estimators.classification import PyTorchClassifier
-from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent, AutoProjectedGradientDescent, BasicIterativeMethod
-from balanced_loss import Loss
+from art.attacks.evasion import FastGradientMethod, DeepFool, CarliniL2Method, UniversalPerturbation, ProjectedGradientDescent, BasicIterativeMethod, Wasserstein
 
 #import foolbox as fb
 #from foolbox.attacks import L2FastGradientAttack, L2CarliniWagnerAttack, L2DeepFoolAttack
@@ -72,6 +71,8 @@ def __get_adv_attack(attack_name, data_loader, classifier, eps):
         attack = ProjectedGradientDescent(estimator=classifier, eps=eps, batch_size=32)    
     elif attack_name == "UAP":
         attack = UniversalPerturbation(classifier=classifier, attacker="pgd", eps=eps, max_iter=10, batch_size=32)
+    elif attack_name == "Wasserstein":
+        attack = Wasserstein(estimator=classifier, eps=eps, max_iter=10, batch_size=32)
     
     adv_attack = attack.generate(x=images)
     
@@ -81,6 +82,7 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
         
     #1st read validation dataset to attack the model
     val_attack_dataset, num_class = utils.load_attacked_database_df(root_path=root_path, csv_path=csv_path, batch_size=batch_size, image_size=input_size)
+    print(num_class)
     #2nd read models from checkpoints
     model_path = os.path.join(weights_path, "{}-{}-exp1.ckpt".format(model_name, dataset_name))
     model = utils.read_model_from_checkpoint(model_path=model_path, model_name=model_name, nb_class=num_class)
@@ -130,16 +132,17 @@ def run_attack(root_path, dataset_name, csv_path, weights_path, model_name, inpu
     metrics_epochs["attack"] = np.repeat(attack_name, size)
     metrics_epochs["dataset"] = np.repeat(dataset_name, size)
     metrics_epochs["eps"] = np.repeat(eps, size)
-                
-    #8th define path to save metrics
-    avg_path = os.path.join(save_metrics_path, "attacks_avg.csv")
-    epochs_path = os.path.join(save_metrics_path, "attacks_epochs.csv")
-    time_path = os.path.join(save_metrics_path, "attacks_time.csv")
     
-    #9th save metrics to CSV file
-    metrics_avg.to_csv(avg_path, index=False, mode="a", header=False if os.path.exists(avg_path) else True)
-    metrics_epochs.to_csv(epochs_path, index=False, mode="a", header=False if os.path.exists(epochs_path) else True)
-    metrics_time.to_csv(time_path, index=False, mode="a", header=False if os.path.exists(time_path) else True)
+    print(metrics_avg)    
+    #8th define path to save metrics
+    # avg_path = os.path.join(save_metrics_path, "attacks_avg.csv")
+    # epochs_path = os.path.join(save_metrics_path, "attacks_epochs.csv")
+    # time_path = os.path.join(save_metrics_path, "attacks_time.csv")
+    
+    # #9th save metrics to CSV file
+    # metrics_avg.to_csv(avg_path, index=False, mode="a", header=False if os.path.exists(avg_path) else True)
+    # metrics_epochs.to_csv(epochs_path, index=False, mode="a", header=False if os.path.exists(epochs_path) else True)
+    # metrics_time.to_csv(time_path, index=False, mode="a", header=False if os.path.exists(time_path) else True)
     
     #10th save logits to numpy file
     if is_logits_save:
