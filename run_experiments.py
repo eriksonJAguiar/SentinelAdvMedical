@@ -99,10 +99,10 @@ if __name__ == '__main__':
                     metrics_ood["time"] = end_ood
                     metrics_ood = {k:[v] for k,v in metrics_ood.items()}
                     print(metrics_ood)
-                    # if os.path.exists("./metrics/metrics_ood.csv"):
-                    #     pd.DataFrame.from_dict(metrics_ood).to_csv("./metrics/metrics_ood.csv", index=False, header=False, mode="a")
-                    # else:
-                    #     pd.DataFrame.from_dict(metrics_ood).to_csv("./metrics/metrics_ood.csv", index=False, header=True, mode="a")
+                    if os.path.exists("./metrics/metrics_ood.csv"):
+                        pd.DataFrame.from_dict(metrics_ood).to_csv("./metrics/metrics_ood.csv", index=False, header=False, mode="a")
+                    else:
+                        pd.DataFrame.from_dict(metrics_ood).to_csv("./metrics/metrics_ood.csv", index=False, header=True, mode="a")
                     
                     #clear cuda memory
                     torch.cuda.empty_cache()
