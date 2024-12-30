@@ -1,6 +1,7 @@
 # SentinelAdvMedical
 
 **Title:** SentinelAdvMedical: toward adversarial attacks detection on medical image classification via Out-Of-Distribution strategies.
+
 **Author(s):** Erikson Júlio de Aguiar, Univ. de São Paulo (Brazil), Univ. of Florida (United States); Agma Juci Juci Machado Traina, Univ. de São Paulo (Brazil); Sumi Helal, Univ. of Florida (United States), Univ. degli Studi di Bologna (Italy)
 
 [[Intallation]](#intallation) [[Paper]]() [[Bibtex]](#bibtex)
