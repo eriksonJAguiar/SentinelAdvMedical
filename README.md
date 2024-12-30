@@ -1,7 +1,9 @@
 # SentinelAdvMedical
 
 **Title:** SentinelAdvMedical: toward adversarial attacks detection on medical image classification via Out-Of-Distribution strategies.
-**Author(s):** Erikson Júlio de Aguiar, Univ. de São Paulo (Brazil), Univ. of Florida (United States); Agma Juci Juci Machado Traina, Univ. de São Paulo (Brazil); Abdelsalam Helal, Univ. of Florida (United States), Univ. degli Studi di Bologna (Italy)
+**Author(s):** Erikson Júlio de Aguiar, Univ. de São Paulo (Brazil), Univ. of Florida (United States); Agma Juci Juci Machado Traina, Univ. de São Paulo (Brazil); Sumi Helal, Univ. of Florida (United States), Univ. degli Studi di Bologna (Italy)
+
+[[Intallation]](#intallation) [[Paper]]() [[Bibtex]](#bibtex)
 
 ## Abstract
 
@@ -11,46 +13,47 @@ Deep Learning (DL) comprehends methods to enhance medical image classification a
 
 To install the necessary dependencies, run the following command:
 
-```bash
-pip install -r requirements.txt
-```
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/erjulioaguiar/SentinelAdvMedical.git
+
+2. Install packages:
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 ## Usage
 
 To use SentinelAdvMedical, follow these steps:
-
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/erjulioaguiar/SentinelAdvMedical.git
     ```
-2. Navigate to the project directory:
+1. Navigate to the project directory:
     ```bash
     cd SentinelAdvMedical
     ```
-3. Run the main script:
+2. Run the main script:
     ```bash
     python run_experiments.py --dataset_name 'oct/melanoma' --dataset_csv 'path_to_dataset' --weights_path 'weights_path' --nb_class '4/7'
     ```
 
-<!-- ## Citation
+## Citation
 
 If you use this code or our method in your research, please cite our paper:
-
+<!-- 
 ```
 @article{SentinelAdvMedical2025,
   title={SentinelAdvMedical: toward adversarial attacks detection on medical image classification via Out-Of-Distribution strategies},
-  author={Erjulio Aguiar and others},
+  author={Aguiar, Erikson J. and Helal, Sumi and Traina, Agma J.M.},
   journal={SPIE Medical Imaging: Computer-Aided Diagnosis},
   year={2025},
-} -->
-```
+} 
+```-->
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## Acknowledgements
 
-We would like to thank our collaborators and the funding agencies for their support.
+We would like to thank São Paulo Research Foundation (FAPESP -- grants 2016/17078-0, 2021/08982-3, 2023/18026-8, 2023/14759-0, 2024/13328-9), the National Research Council (CNPq), and Coordination for Higher Education Personnel Improvement (CAPES -- grant 001).
 
-For more information, please email to [Erjulio Aguiar](mailto:erjulioaguiar@usp.br) or text me on [LinkedIn]().
+For more information, please email to erjulioaguiar@usp.br or text me on [LinkedIn](https://www.linkedin.com/in/erjulioaguiar/).
