@@ -4,7 +4,7 @@
 
 **Author(s):** Erikson Júlio de Aguiar, Univ. de São Paulo (Brazil), Univ. of Florida (United States); Agma Juci Juci Machado Traina, Univ. de São Paulo (Brazil); Sumi Helal, Univ. of Florida (United States), Univ. degli Studi di Bologna (Italy)
 
-[[Intallation]](#intallation) [[Paper]]() [[Bibtex]](#bibtex)
+[[Installation]](#installation) [[Paper]]() [[Bibtex]](#citation)
 
 ## Abstract
 
